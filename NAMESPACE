@@ -2,9 +2,11 @@
 
 export(import_bis_credit_to_gdp_ratios)
 export(import_bis_policy_rates)
+export(import_bis_total_credit)
 export(import_boi_oracle_finrep_data)
 import(dplyr)
 import(magrittr)
+import(stringr)
 importFrom(readr,read_csv)
 importFrom(readr,read_rds)
 importFrom(rlang,.data)
