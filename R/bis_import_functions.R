@@ -1,6 +1,6 @@
 #' This function imports policy rates from BIS format
 #'
-#' @importFrom  readr read_csv
+#' @importFrom  readr read_csv cols
 #'
 #' @importFrom zoo as.yearmon
 #'
@@ -44,7 +44,7 @@ import_bis_policy_rates = function(file_path){
 
 #' This function imports credit to GDP ratios from BIS format
 #'
-#' @importFrom  readr read_csv
+#' @importFrom  readr read_csv cols
 #'
 #' @importFrom zoo as.yearqtr
 #'
@@ -101,8 +101,8 @@ import_bis_credit_to_gdp_ratios = function(file_path,
     rename_all(~ str_replace_all(., " ", "_")) %>%
     rename_all(~ str_remove_all(., "'")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    rename(country = borrowers_country) %>%
-    rename(country_code = borrowers_cty)
+    rename(country = .data$borrowers_country) %>%
+    rename(country_code = .data$borrowers_cty)
 
   filtered_df = named_df %>%
     filter(.data$frequency == my_frequency) %>%
@@ -113,9 +113,9 @@ import_bis_credit_to_gdp_ratios = function(file_path,
     select(-.data$lending_sector)
 
   clean_df = filtered_df %>%
-    mutate(credit_gap_data_type = str_remove_all(credit_gap_data_type,"\\(.*\\)")) %>%
-    mutate(credit_gap_data_type = str_remove_all(credit_gap_data_type,"Credit-to-GDP")) %>%
-    mutate(credit_gap_data_type = str_remove_all(credit_gap_data_type,"\\s")) %>%
+    mutate(credit_gap_data_type = str_remove_all(.data$credit_gap_data_type,"\\(.*\\)")) %>%
+    mutate(credit_gap_data_type = str_remove_all(.data$credit_gap_data_type,"Credit-to-GDP")) %>%
+    mutate(credit_gap_data_type = str_remove_all(.data$credit_gap_data_type,"\\s")) %>%
     pivot_longer(-c(.data$country,
                     .data$country_code,
                     .data$credit_gap_data_type), names_to = "date",
@@ -133,7 +133,7 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 
 #' This function imports total credit to private sector from BIS format
 #'
-#' @importFrom  readr read_csv
+#' @importFrom  readr read_csv cols
 #'
 #' @importFrom zoo as.yearqtr
 #'
@@ -151,13 +151,13 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 #'
 #' @param file_path string a file path to the source data file
 #'
-#' @param my_frequency time frequency of the data (default is Quarterly),
+#' @param my_frequency time frequency of the data (default is NULL),
 #' available options are:
 #' \itemize{
 #'  \item Quarterly
 #' }
 #'
-#' @param my_borrowing_sector (default is Private non-financial sector),
+#' @param my_borrowing_sector (default is NULL),
 #' available options are:
 #' \itemize{
 #'  \item Non financial sector
@@ -167,21 +167,21 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 #'  \item Private non-financial sector
 #' }
 #'
-#' @param my_lending_sector (default is All sectors),
+#' @param my_lending_sector (default is NULL),
 #' available options are:
 #' \itemize{
 #'  \item All sectors
 #'  \item Banks, domestic
 #' }
 #'
-#' @param my_valuation (default is Market value), toggles the
+#' @param my_valuation (default is NULL), toggles the
 #' difference between credit and debt. available options are:
 #' \itemize{
 #'  \item Nominal value
 #'  \item Market value
 #' }
 #'
-#' @param my_unit_type (default is US Dollar),
+#' @param my_unit_type (default is NULL),
 #' available options are:
 #' \itemize{
 #'  \item US Dollar
@@ -191,7 +191,7 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 #' }
 #'
 #'
-#' @param my_type_of_adjustment (default is Unadjusted for breaks),
+#' @param my_type_of_adjustment (default is NULL),
 #' available options are:
 #' \itemize{
 #'  \item Adjusted for breaks
@@ -200,15 +200,15 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 #' @export
 #'
 import_bis_total_credit = function(file_path,
-                                   my_frequency = "Quarterly",
-                                   my_borrowing_sector = "Private non-financial sector",
-                                   my_lending_sector = "All sectors",
-                                   my_valuation = "Market value",
-                                   my_unit_type = "US Dollar",
-                                   my_type_of_adjustment = "Unadjusted for breaks") {
+                                   my_frequency = NULL,
+                                   my_borrowing_sector = NULL,
+                                   my_lending_sector = NULL,
+                                   my_valuation = NULL,
+                                   my_unit_type = NULL,
+                                   my_type_of_adjustment = NULL) {
   . = NULL
 
-  raw_df = read_csv(file_path,col_types = cols())
+  raw_df = read_csv(file_path, col_types = cols())
 
   named_df = raw_df %>%
     select(
@@ -221,38 +221,75 @@ import_bis_total_credit = function(file_path,
       -.data$VALUATION
     ) %>%
     rename_all(~ str_replace_all(., " ", "_")) %>%
-    rename_all(~ str_remove_all(., "'")) %>%
+    rename_all( ~ str_remove_all(., "'")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    rename(country = borrowers_country) %>%
-    rename(country_code = borrowers_cty) %>%
+    rename(country = .data$borrowers_country) %>%
+    rename(country_code = .data$borrowers_cty) %>%
     mutate(country = str_replace_all(.data$country, "\\s", "_"))
 
-  filtered_df = named_df %>%
-    filter(.data$frequency == my_frequency) %>%
-    select(-.data$frequency) %>%
-    filter(.data$type_of_adjustment == my_type_of_adjustment) %>%
-    select(-.data$type_of_adjustment) %>%
-    filter(.data$valuation %in% my_valuation) %>%
-    filter(.data$borrowing_sector %in% my_borrowing_sector) %>%
-    filter(.data$lending_sector %in% my_lending_sector) %>%
+  filtered_df = named_df
+
+  if (!is.null(my_frequency)) {
+    filtered_df = filtered_df %>%
+      filter(.data$frequency == my_frequency) %>%
+      select(-.data$frequency)
+
+  }
+
+  if (!is.null(my_type_of_adjustment)) {
+      filtered_df = filtered_df %>%
+        filter(.data$type_of_adjustment == my_type_of_adjustment) %>%
+        select(-.data$type_of_adjustment)
+
+  }
+
+  if (!is.null(my_valuation)) {
+    filtered_df = filtered_df %>%
+      filter(.data$valuation == my_valuation) %>%
+      select(-.data$valuation)
+
+  }
+
+
+
+  filtered_df = filtered_df %>%
+    {
+      if (!is.null(my_borrowing_sector))
+        filter(., .data$borrowing_sector %in% my_borrowing_sector)
+      else
+        .
+    } %>%
+    # filter(.data$borrowing_sector %in% my_borrowing_sector) %>%
+    {
+      if (!is.null(my_lending_sector))
+        filter(., .data$lending_sector %in% my_lending_sector)
+      else
+        .
+    } %>%
+    # filter(.data$lending_sector %in% my_lending_sector) %>%
     mutate(unit_type = str_replace_all(.data$unit_type,
                                        " \\(using PPP exchange rates\\)",
                                        "-PPP")) %>%
-    mutate(unit_type = str_remove_all(
-      .data$unit_type,
-      " \\(incl. conversion to current currency made using a fix parity\\)"
-    )) %>%
-    filter(.data$unit_type %in% unit_type)
+    mutate(
+      unit_type = str_remove_all(
+        .data$unit_type,
+        " \\(incl. conversion to current currency made using a fix parity\\)"
+      )
+    ) %>%
+    {
+      if (!is.null(my_unit_type))
+        filter(., .data$unit_type %in% my_unit_type)
+      else
+        .
+    }
+
 
 
   clean_df = filtered_df %>%
-    pivot_longer(-c(.data$country,
-                    .data$country_code,
-                    .data$borrowing_sector,
-                    .data$lending_sector,
-                    .data$unit_type,
-                    .data$valuation), names_to = "date",
-                 values_to = "total_credit") %>%
+    pivot_longer(matches("^[0-9]"),
+      names_to = "date",
+      values_to = "total_credit"
+    ) %>%
     filter(complete.cases(.)) %>%
     mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
 
