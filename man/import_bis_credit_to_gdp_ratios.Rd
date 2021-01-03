@@ -6,27 +6,27 @@
 \usage{
 import_bis_credit_to_gdp_ratios(
   file_path,
-  frequency = "Quarterly",
-  borrowing_sector = "Private non-financial sector",
-  lending_sector = "All sectors"
+  my_frequency = "Quarterly",
+  my_borrowing_sector = "Private non-financial sector",
+  my_lending_sector = "All sectors"
 )
 }
 \arguments{
 \item{file_path}{string a file path to the source data file}
 
-\item{frequency}{time frequency of the data (default is Quarterly),
+\item{my_frequency}{time frequency of the data (default is Quarterly),
 available options are:
 \itemize{
  \item Quarterly
 }}
 
-\item{borrowing_sector}{(default is Private non-financial sector),
+\item{my_borrowing_sector}{(default is Private non-financial sector),
 available options are:
 \itemize{
  \item Private non-financial sector
 }}
 
-\item{lending_sector}{(default is All sectors),
+\item{my_lending_sector}{(default is All sectors),
 available options are:
 \itemize{
  \item All sectors

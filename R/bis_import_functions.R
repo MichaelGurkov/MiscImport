@@ -299,3 +299,167 @@ import_bis_total_credit = function(file_path,
 }
 
 
+#' This function imports debt securities from BIS format
+#'
+#' @importFrom  readr read_csv cols
+#'
+#' @importFrom zoo as.yearqtr
+#'
+#' @importFrom stats complete.cases
+#'
+#' @importFrom rlang .data
+#'
+#' @importFrom  tidyr pivot_longer
+#'
+#' @importFrom stringr str_replace_all str_remove_all
+#'
+#' @import magrittr
+#'
+#' @import dplyr
+#'
+#' @param file_path string a file path to the source data file
+#'
+#' @param my_frequency time frequency of the data (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Quarterly
+#' }
+#'
+#' @param my_measure (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Amounts outstanding
+#'  \item Net issues
+#'  \item Gross issues
+#' }
+#'
+#' @param my_issuer_sector_immediate_borrower (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All issuers
+#'  \item Financial corporations
+#'  \item Private banks
+#'  \item International institutions
+#'  \item Public banks
+#'  \item General government
+#'  \item Non-financial corporations
+#'  \item Private other financial institutions
+#'  \item Central bank
+#'  \item Public other financial institutions
+#' }
+#'
+#' @param my_issuer_sector_ultimate_borrower (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All issuers
+#'  \item Financial corporations
+#'  \item Private banks
+#'  \item International institutions
+#'  \item Public banks
+#'  \item General government
+#'  \item Non-financial corporations
+#'  \item Private other financial institutions
+#'  \item Central bank
+#'  \item Public other financial institutions
+#' }
+#'
+#' @param my_issue_market (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All markets
+#'  \item Domestic market
+#'  \item International markets
+#' }
+#'
+#'
+#' @param my_issue_currency_group (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All currencies
+#'  \item Foreign currencies
+#'  \item Domestic currency
+#' }
+
+#' @param my_issue_currency (default is NULL),
+#' There are 65 available options, the special are:
+#' \itemize{
+#'  \item Total all currencies
+#'  \item Sum of ECU, Euro and legacy currencies now included in the Euro
+#' }
+#'
+#'
+#' @export
+#'
+import_bis_debt_sec = function(file_path,
+                               my_frequency = NULL,
+                               my_measure = NULL,
+                               my_country = NULL,
+                               my_issuer_sector_immediate_borrower = NULL,
+                               my_issuer_sector_ultimate_borrower = NULL,
+                               my_issue_market = NULL,
+                               my_issue_currency_group = NULL,
+                               my_issue_currency = NULL,
+                               my_original_maturity = NULL,
+                               my_remaining_maturity = NULL,
+                               my_rate_type = NULL,
+                               my_default_risk = NULL,
+                               my_collateral_type = NULL) {
+  . = NULL
+
+  filtered_df = read_csv(file_path, col_types = cols()) %>%
+    select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
+    select(-.data$`Time Period`) %>%
+    rename_all( ~ str_replace_all(., " ", "_")) %>%
+    rename_all( ~ str_replace_all(., "_-_", "_")) %>%
+    rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
+    rename_with(tolower, matches("^[A-Za-z]")) %>%
+    rename(country = issuer_residence) %>%
+    mutate(country = str_replace_all(country,"\\s","_"))
+
+
+  for (filter_val in c(
+    "my_frequency",
+    "my_measure",
+    "my_country",
+    "my_issuer_sector_immediate_borrower",
+    "my_issuer_sector_ultimate_borrower",
+    "my_issue_market",
+    "my_issue_currency_group",
+    "my_issue_currency",
+    "my_original_maturity",
+    "my_remaining_maturity",
+    "my_rate_type",
+    "my_default_risk",
+    "my_collateral_type"
+  )) {
+
+
+    if(!is.null(get(filter_val))){
+
+      filter_name = filter_val %>%
+        str_remove("my_")
+
+      filtered_df = filtered_df %>%
+        filter(!!sym(filter_name) %in% !!sym(filter_val))
+
+
+    }
+
+
+
+
+  }
+
+
+  clean_df = filtered_df %>%
+    pivot_longer(matches("^[0-9]"),
+                 names_to = "date",
+                 values_to = "debt_credit"
+    ) %>%
+    filter(complete.cases(.)) %>%
+    mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+
+  return(clean_df)
+
+
+}
