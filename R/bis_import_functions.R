@@ -333,6 +333,12 @@ import_bis_total_credit = function(file_path,
 #'  \item Gross issues
 #' }
 #'
+#' @param my_issuer_residence (default is NULL)
+#' The residence of the issuer is the country where the issuer is incorporated.
+#'
+#' @param my_issuer_nationality (default is NULL)
+#' The nationality of the issuer is the country where the issuer's parent is headquartered
+#'
 #' @param my_issuer_sector_immediate_borrower (default is NULL),
 #' available options are:
 #' \itemize{
@@ -371,6 +377,12 @@ import_bis_total_credit = function(file_path,
 #'  \item International markets
 #' }
 #'
+#' @param my_issue_type (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All issue types
+#' }
+#'
 #'
 #' @param my_issue_currency_group (default is NULL),
 #' available options are:
@@ -387,23 +399,28 @@ import_bis_total_credit = function(file_path,
 #'  \item Sum of ECU, Euro and legacy currencies now included in the Euro
 #' }
 #'
+#' @param pivot_to_long logical toggle button - sets the shape of the data
+#'
 #'
 #' @export
 #'
 import_bis_debt_sec = function(file_path,
                                my_frequency = NULL,
                                my_measure = NULL,
-                               my_country = NULL,
+                               my_issuer_residence = NULL,
+                               my_issuer_nationality = NULL,
                                my_issuer_sector_immediate_borrower = NULL,
                                my_issuer_sector_ultimate_borrower = NULL,
                                my_issue_market = NULL,
+                               my_issue_type = NULL,
                                my_issue_currency_group = NULL,
                                my_issue_currency = NULL,
                                my_original_maturity = NULL,
                                my_remaining_maturity = NULL,
                                my_rate_type = NULL,
                                my_default_risk = NULL,
-                               my_collateral_type = NULL) {
+                               my_collateral_type = NULL,
+                               pivot_to_long = TRUE) {
   . = NULL
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
@@ -413,17 +430,18 @@ import_bis_debt_sec = function(file_path,
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    rename(country = issuer_residence) %>%
-    mutate(country = str_replace_all(country,"\\s","_"))
+    mutate(issuer_residence = str_replace_all(issuer_residence,"\\s","_"))
 
 
   for (filter_val in c(
     "my_frequency",
     "my_measure",
-    "my_country",
+    "my_issuer_residence",
+    "my_issuer_nationality",
     "my_issuer_sector_immediate_borrower",
     "my_issuer_sector_ultimate_borrower",
     "my_issue_market",
+    "my_issue_type",
     "my_issue_currency_group",
     "my_issue_currency",
     "my_original_maturity",
@@ -451,15 +469,21 @@ import_bis_debt_sec = function(file_path,
   }
 
 
-  clean_df = filtered_df %>%
-    pivot_longer(matches("^[0-9]"),
-                 names_to = "date",
-                 values_to = "debt_credit"
-    ) %>%
-    filter(complete.cases(.)) %>%
-    mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+  if(pivot_to_long){
 
-  return(clean_df)
+    filtered_df = filtered_df %>%
+      pivot_longer(matches("^[0-9]"),
+                   names_to = "date",
+                   values_to = "debt_credit"
+      ) %>%
+      mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+
+
+
+  }
+
+
+  return(filtered_df)
 
 
 }
