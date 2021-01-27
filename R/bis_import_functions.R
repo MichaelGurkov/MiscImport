@@ -399,7 +399,7 @@ import_bis_total_credit = function(file_path,
 #'  \item Sum of ECU, Euro and legacy currencies now included in the Euro
 #' }
 #'
-#' @param pivot_to_long logical toggle button - sets the shape of the data
+#' @param pivot_to_long reshape the data to long format? Default is FALSE
 #'
 #'
 #' @export
@@ -420,7 +420,7 @@ import_bis_debt_sec = function(file_path,
                                my_rate_type = NULL,
                                my_default_risk = NULL,
                                my_collateral_type = NULL,
-                               pivot_to_long = TRUE) {
+                               pivot_to_long = FALSE) {
   . = NULL
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
@@ -487,3 +487,189 @@ import_bis_debt_sec = function(file_path,
 
 
 }
+
+
+
+
+#' This function imports locational banking statistics from BIS format
+#'
+#' @importFrom  readr read_csv cols
+#'
+#' @importFrom zoo as.yearqtr
+#'
+#' @importFrom stats complete.cases
+#'
+#' @importFrom rlang .data
+#'
+#' @importFrom  tidyr pivot_longer
+#'
+#' @importFrom stringr str_replace_all str_remove_all
+#'
+#' @import magrittr
+#'
+#' @import dplyr
+#'
+#' @param file_path string a file path to the source data file
+#'
+#' @param my_frequency time frequency of the data (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Quarterly
+#' }
+#'
+#' @param my_measure (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item FX and break adjusted change (BIS calculated)
+#'  \item Amounts outstanding / Stocks
+#' }
+#'
+#' @param my_balance_sheet_position (default is NULL)
+#' available options are:
+#' \itemize{
+#'  \item Total claims
+#'  \item Total liabilities
+#' }
+#'
+#' @param my_type_of_instruments (default is NULL)
+#' available options are:
+#' \itemize{
+#'  \item All instruments
+#'  \item Debt securities
+#'  \item Loans and deposits
+#'  \item Other instruments
+#'  \item Unallocated by instrument
+#'  \item Debt securities, short-term
+#' }
+#'
+#' @param my_currency_denomination (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Swiss Franc
+#'  \item Euro
+#'  \item Pound Sterling
+#'  \item Japanese Yen
+#'  \item US Dollar
+#'  \item All currencies
+#'  \item All currencies excluding USD, EUR, JPY, CHF and GBP
+#'  \item Unallocated currencies
+#' }
+#'
+#' @param my_currency_type_of_reporting_country (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All currencies (=D+F+U)
+#'  \item Foreign currency (ie currencies foreign to bank location country)
+#'  \item Domestic currency (ie currency of bank location country)
+#'  \item Unclassified currency
+#' }
+#'
+#' @param my_reporting_country string
+#'
+#' @param my_counterparty_sector (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All sectors
+#'  \item Banks, total
+#'  \item Non-financial corporations
+#'  \item Non-bank financial institutions
+#'  \item General government
+#'  \item Households and NPISHs
+#'  \item Banks, related offices
+#'  \item Banks, central banks
+#'  \item Non-banks, total
+#'  \item Non-financial sectors
+#'  \item Unallocated by sector
+#'
+#' }
+#'
+#'
+#' @param my_position_type (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All
+#'  \item Cross-border
+#'  \item Local
+#'  \item Unallocated
+#' }
+#'
+#'
+#' @param pivot_to_long reshape the data to long format? Default is FALSE
+#'
+#'
+#' @export
+#'
+import_bis_lbs = function(file_path,
+                               my_frequency = NULL,
+                               my_measure = NULL,
+                               my_balance_sheet_position = NULL,
+                               my_type_of_instruments = NULL,
+                               my_currency_denomination = NULL,
+                               my_currency_type_of_reporting_country = NULL,
+                               my_reporting_country = NULL,
+                               my_counterparty_sector = NULL,
+                               my_counterparty_country = NULL,
+                               my_position_type = NULL,
+                               pivot_to_long = FALSE) {
+  . = NULL
+
+  filtered_df = read_csv(file_path, col_types = cols()) %>%
+    select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
+    rename_all( ~ str_replace_all(., " ", "_")) %>%
+    rename_all( ~ str_replace_all(., "_-_", "_")) %>%
+    rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
+    rename_with(tolower, matches("^[A-Za-z]"))
+
+
+  for (filter_val in c(
+    "my_frequency",
+    "my_measure",
+    "my_balance_sheet_position",
+    "my_type_of_instruments",
+    "my_currency_denomination",
+    "my_currency_type_of_reporting_country",
+    "my_reporting_country",
+    "my_counterparty_sector",
+    "my_counterparty_country",
+    "my_position_type"
+  )) {
+
+
+    if(!is.null(get(filter_val))){
+
+      filter_name = filter_val %>%
+        str_remove("my_")
+
+      filtered_df = filtered_df %>%
+        filter(!!sym(filter_name) %in% !!sym(filter_val))
+
+
+    }
+
+
+
+
+  }
+
+
+  if(pivot_to_long){
+
+    filtered_df = filtered_df %>%
+      pivot_longer(matches("^[0-9]"),
+                   names_to = "date",
+                   values_to = "balance"
+      ) %>%
+      mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+
+
+
+  }
+
+
+  return(filtered_df)
+
+
+}
+
+
+
