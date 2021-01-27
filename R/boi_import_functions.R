@@ -1,3 +1,5 @@
+utils::globalVariables("where")
+
 #' @title Import Oracle format financial report data
 #'
 #' @description  This function imports financial report data from Oracle format

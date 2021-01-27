@@ -8,17 +8,20 @@ import_bis_debt_sec(
   file_path,
   my_frequency = NULL,
   my_measure = NULL,
-  my_country = NULL,
+  my_issuer_residence = NULL,
+  my_issuer_nationality = NULL,
   my_issuer_sector_immediate_borrower = NULL,
   my_issuer_sector_ultimate_borrower = NULL,
   my_issue_market = NULL,
+  my_issue_type = NULL,
   my_issue_currency_group = NULL,
   my_issue_currency = NULL,
   my_original_maturity = NULL,
   my_remaining_maturity = NULL,
   my_rate_type = NULL,
   my_default_risk = NULL,
-  my_collateral_type = NULL
+  my_collateral_type = NULL,
+  pivot_to_long = FALSE
 )
 }
 \arguments{
@@ -37,6 +40,12 @@ available options are:
  \item Net issues
  \item Gross issues
 }}
+
+\item{my_issuer_residence}{(default is NULL)
+The residence of the issuer is the country where the issuer is incorporated.}
+
+\item{my_issuer_nationality}{(default is NULL)
+The nationality of the issuer is the country where the issuer's parent is headquartered}
 
 \item{my_issuer_sector_immediate_borrower}{(default is NULL),
 available options are:
@@ -76,6 +85,12 @@ available options are:
  \item International markets
 }}
 
+\item{my_issue_type}{(default is NULL),
+available options are:
+\itemize{
+ \item All issue types
+}}
+
 \item{my_issue_currency_group}{(default is NULL),
 available options are:
 \itemize{
@@ -90,6 +105,8 @@ There are 65 available options, the special are:
  \item Total all currencies
  \item Sum of ECU, Euro and legacy currencies now included in the Euro
 }}
+
+\item{pivot_to_long}{reshape the data to long format? Default is FALSE}
 }
 \description{
 This function imports debt securities from BIS format

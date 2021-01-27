@@ -1,0 +1,91 @@
+---
+title: "Debt securities dataset"
+---
+
+
+```{r import_data}
+
+df = import_bis_debt_sec(file_path = paste0(
+  file.path(Sys.getenv("USERPROFILE")),
+  "\\OneDrive - Bank Of Israel\\Data\\BIS\\",
+  "WEBSTATS_DEBTSEC_DATAFLOW_csv_col.csv"),pivot_to_long = FALSE)
+
+
+```
+
+
+
+# Intro
+
+The debt dataset captures debt instruments (think bonds) that are issued in
+local (Domestic debt securities) or international (International debt securities)
+markets. For example an Israeli company issuing bonds in Israel will be
+designated to domestic market where as an Israeli company issuing bonds
+abroad will be classified to international market.
+
+
+
+
+The location of the company is decided by two factors:
+* Nationality - the place where parent company is headquartered.
+* Residence - the place where the company is incorporated.
+
+So for example a company that is headquartered in Israel but was incorporated 
+in say Cyprus will be considered Cypriot company by residence but Israeli by nationality.
+
+
+The following chart plot companies that were incorporated in Israel (Israeli residence) by the markets
+
+```{r plot_israeli_residence_by_market_issue}
+
+temp_residence = df %>%
+  filter(.data$issuer_residence == "Israel") %>%
+  filter(.data$issuer_nationality == "All countries excluding residents") %>%
+  filter(.data$issuer_sector_immediate_borrower == "Non-financial corporations") %>%
+  filter(.data$original_maturity == "Total (all maturities)") %>%
+  filter(.data$remaining_maturity == "Total (all maturities)") %>%
+  filter(.data$measure == "Amounts outstanding") %>%
+  filter(.data$issue_market %in% c("International markets",
+                                   "Domestic market")) %>%
+  filter(.data$issue_currency_group == "All currencies") %>%
+  filter(.data$issue_currency == "Total all currencies") %>%
+  filter(.data$rate_type == "All rate types")
+
+
+temp_residence %>% 
+  select(matches("^[0-9]"),issue_market) %>% 
+  pivot_longer(cols = - issue_market,names_to = "date") %>% 
+  filter(complete.cases(.)) %>% 
+  mutate(value = as.numeric(value),
+         date = as.yearqtr(date, format = "%Y-Q%q")) %>% 
+  filter(date >= as.yearqtr("2000 Q1")) %>% 
+  ggplot(aes(x = date, y = value, color = issue_market)) + 
+  geom_line() + 
+  xlab(NULL) + ylab(NULL) + ggtitle("Israeli incorporatet comps issues") + 
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+rm(temp_residence)
+
+```
+
+
+
+Bis has expanded its International statistics to include details about currency
+and interest rate type. We can look at currency composition of international
+issues
+
+```{r}
+
+temp_currency = df %>% 
+  filter(issuer_nationality == "All countries excluding residents") %>% 
+  filter(issuer_sector_immediate_borrower == "Non-financial corporations") %>% 
+  filter(original_maturity == "Total (all maturities)") %>% 
+  filter(remaining_maturity == "Total (all maturities)") %>% 
+  filter(measure == "Amounts outstanding") %>% 
+  filter(issue_market == "International markets") %>% 
+  filter(issue_currency_group == "Foreign currencies") %>% 
+  filter(issue_currency == "Total all currencies") %>% 
+  filter(rate_type == "All rate types")
+
+```
+
