@@ -38,18 +38,19 @@ The following chart plot companies that were incorporated in Israel (Israeli res
 
 ```{r plot_israeli_residence_by_market_issue}
 
-temp_residence = df %>%
-  filter(.data$issuer_residence == "Israel") %>%
-  filter(.data$issuer_nationality == "All countries excluding residents") %>%
-  filter(.data$issuer_sector_immediate_borrower == "Non-financial corporations") %>%
-  filter(.data$original_maturity == "Total (all maturities)") %>%
-  filter(.data$remaining_maturity == "Total (all maturities)") %>%
-  filter(.data$measure == "Amounts outstanding") %>%
-  filter(.data$issue_market %in% c("International markets",
-                                   "Domestic market")) %>%
-  filter(.data$issue_currency_group == "All currencies") %>%
-  filter(.data$issue_currency == "Total all currencies") %>%
-  filter(.data$rate_type == "All rate types")
+
+temp_residence = df %>% 
+  filter(issuer_residence == "Israel") %>% 
+  filter(issuer_nationality == "All countries excluding residents") %>% 
+  filter(issuer_sector_immediate_borrower == "Non-financial corporations") %>% 
+  filter(original_maturity == "Total (all maturities)") %>% 
+  filter(remaining_maturity == "Total (all maturities)") %>% 
+  filter(measure == "Amounts outstanding") %>% 
+  filter(issue_market %in% c("International markets",
+                             "Domestic market")) %>% 
+  filter(issue_currency_group == "All currencies") %>% 
+  filter(issue_currency == "Total all currencies") %>% 
+  filter(rate_type == "All rate types")
 
 
 temp_residence %>% 

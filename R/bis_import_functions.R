@@ -577,7 +577,6 @@ import_bis_debt_sec = function(file_path,
 #'  \item Foreign subsidiaries
 #' }
 #'
-#'
 #' @param my_counterparty_sector (default is NULL),
 #' available options are:
 #' \itemize{
