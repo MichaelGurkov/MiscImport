@@ -2,6 +2,7 @@
 
 export(import_bis_credit_to_gdp_ratios)
 export(import_bis_debt_sec)
+export(import_bis_fx_rates)
 export(import_bis_lbs)
 export(import_bis_policy_rates)
 export(import_bis_selected_property_prices)

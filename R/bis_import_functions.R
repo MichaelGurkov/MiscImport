@@ -817,3 +817,118 @@ import_bis_selected_property_prices = function(file_path,
   return(filtered_df)
 
 }
+
+
+#' @title  This function imports BIS FX rates
+#'
+#' @importFrom  readr read_csv cols
+#'
+#' @importFrom zoo as.yearqtr
+#'
+#' @importFrom stats complete.cases
+#'
+#' @importFrom rlang .data
+#'
+#' @importFrom  tidyr pivot_longer
+#'
+#' @importFrom stringr str_replace_all str_remove_all
+#'
+#' @import magrittr
+#'
+#' @import dplyr
+#'
+#' @param file_path string a file path to the source data file
+#'
+#'
+#' @param my_frequency time frequency of the data (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Quarterly
+#'  \item Annual
+#' }
+#'
+#' @param my_currency string specifies the counter currency in USD/XXX pair
+#'
+#'
+#' @param my_collection (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Average of observations through period
+#'  \item End of period
+#' }
+#'
+#' @param pivot_to_long reshape the data to long format? Default is FALSE
+#'
+#' @export
+#'
+#'
+import_bis_fx_rates = function(file_path,
+                               my_frequency = NULL,
+                               my_currency = NULL,
+                               my_collection = NULL,
+                               pivot_to_long = FALSE) {
+
+
+  . = NULL
+
+  filtered_df = read_csv(file_path, col_types = cols()) %>%
+    select(-.data$`Time Period`) %>%
+    select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
+    rename_all( ~ str_replace_all(., " ", "_")) %>%
+    rename_all( ~ str_replace_all(., "_-_", "_")) %>%
+    rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
+    rename_with(tolower, matches("^[A-Za-z]")) %>%
+    rename(country = reference_area)
+
+
+  for (filter_name in c(
+    "my_frequency",
+    "my_currency",
+    "my_collection"
+  )) {
+
+
+    filter_val = get(filter_name)
+
+    if(!is.null(filter_val)){
+
+      filter_name = filter_name %>%
+        str_remove("my_")
+
+      filtered_df = filtered_df %>%
+        filter(!!sym(filter_name) %in% filter_val)
+
+      if(length(filter_val) == 1){
+
+        filtered_df = filtered_df %>%
+          select(-!!sym(filter_name))
+
+      }
+
+
+    }
+
+
+
+
+  }
+
+
+
+  if(pivot_to_long){
+
+    filtered_df = filtered_df %>%
+      pivot_longer(matches("^[0-9]"),
+                   names_to = "date",
+                   values_to = "fx_rate"
+      ) %>%
+      mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+
+
+
+  }
+
+
+  return(filtered_df)
+
+}
