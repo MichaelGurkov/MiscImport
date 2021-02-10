@@ -763,7 +763,8 @@ import_bis_selected_property_prices = function(file_path,
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    rename(country = reference_area)
+    rename(country = reference_area) %>%
+    mutate(country = str_replace_all(.data$country, "\\s", "_"))
 
 
   for (filter_name in c(
@@ -878,7 +879,8 @@ import_bis_fx_rates = function(file_path,
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    rename(country = reference_area)
+    rename(country = reference_area) %>%
+    mutate(country = str_replace_all(.data$country, "\\s", "_"))
 
 
   for (filter_name in c(
