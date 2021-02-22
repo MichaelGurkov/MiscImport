@@ -197,6 +197,9 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 #'  \item Adjusted for breaks
 #'  \item Unadjusted for breaks
 #' }
+#'
+#' @param pivot_to_long reshape the data to long format? Default is FALSE
+#'
 #' @export
 #'
 import_bis_total_credit = function(file_path,
@@ -205,95 +208,73 @@ import_bis_total_credit = function(file_path,
                                    my_lending_sector = NULL,
                                    my_valuation = NULL,
                                    my_unit_type = NULL,
-                                   my_type_of_adjustment = NULL) {
+                                   my_type_of_adjustment = NULL,
+                                   pivot_to_long = FALSE) {
+
   . = NULL
 
-  raw_df = read_csv(file_path, col_types = cols())
-
-  named_df = raw_df %>%
-    select(
-      -.data$FREQ,
-      -.data$TC_BORROWERS,
-      -.data$TC_LENDERS,
-      -.data$`Time Period`,
-      -.data$TC_ADJUST,
-      -.data$UNIT_TYPE,
-      -.data$VALUATION
-    ) %>%
-    rename_all(~ str_replace_all(., " ", "_")) %>%
-    rename_all( ~ str_remove_all(., "'")) %>%
+  filtered_df = read_csv(file_path, col_types = cols()) %>%
+    select(-.data$`Time Period`) %>%
+    select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
+    rename_all( ~ str_replace_all(., " ", "_")) %>%
+    rename_all( ~ str_replace_all(., "_-_", "_")) %>%
+    rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    rename(country = .data$borrowers_country) %>%
-    rename(country_code = .data$borrowers_cty) %>%
+    rename(country = "borrowers'_country") %>%
     mutate(country = str_replace_all(.data$country, "\\s", "_"))
 
-  filtered_df = named_df
 
-  if (!is.null(my_frequency)) {
-    filtered_df = filtered_df %>%
-      filter(.data$frequency == my_frequency) %>%
-      select(-.data$frequency)
+  for (filter_name in c(
+    "my_frequency",
+    "my_borrowing_sector",
+    "my_lending_sector",
+    "my_valuation",
+    "my_unit_type",
+    "my_type_of_adjustment"
+  )) {
 
-  }
 
-  if (!is.null(my_type_of_adjustment)) {
+    filter_val = get(filter_name)
+
+    if(!is.null(filter_val)){
+
+      filter_name = filter_name %>%
+        str_remove("my_")
+
       filtered_df = filtered_df %>%
-        filter(.data$type_of_adjustment == my_type_of_adjustment) %>%
-        select(-.data$type_of_adjustment)
+        filter(!!sym(filter_name) %in% filter_val)
 
-  }
+      if(length(filter_val) == 1){
 
-  if (!is.null(my_valuation)) {
-    filtered_df = filtered_df %>%
-      filter(.data$valuation == my_valuation) %>%
-      select(-.data$valuation)
+        filtered_df = filtered_df %>%
+          select(-!!sym(filter_name))
 
-  }
+      }
 
 
-
-  filtered_df = filtered_df %>%
-    {
-      if (!is.null(my_borrowing_sector))
-        filter(., .data$borrowing_sector %in% my_borrowing_sector)
-      else
-        .
-    } %>%
-    # filter(.data$borrowing_sector %in% my_borrowing_sector) %>%
-    {
-      if (!is.null(my_lending_sector))
-        filter(., .data$lending_sector %in% my_lending_sector)
-      else
-        .
-    } %>%
-    # filter(.data$lending_sector %in% my_lending_sector) %>%
-    mutate(unit_type = str_replace_all(.data$unit_type,
-                                       " \\(using PPP exchange rates\\)",
-                                       "-PPP")) %>%
-    mutate(
-      unit_type = str_remove_all(
-        .data$unit_type,
-        " \\(incl. conversion to current currency made using a fix parity\\)"
-      )
-    ) %>%
-    {
-      if (!is.null(my_unit_type))
-        filter(., .data$unit_type %in% my_unit_type)
-      else
-        .
     }
 
 
 
-  clean_df = filtered_df %>%
-    pivot_longer(matches("^[0-9]"),
-      names_to = "date",
-      values_to = "total_credit"
-    ) %>%
-    filter(complete.cases(.)) %>%
-    mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
 
-  return(clean_df)
+  }
+
+
+
+  if(pivot_to_long){
+
+    filtered_df = filtered_df %>%
+      pivot_longer(matches("^[0-9]"),
+                   names_to = "date",
+                   values_to = "total_credit"
+      )
+
+
+
+  }
+
+
+  return(filtered_df)
 
 
 }
@@ -925,6 +906,118 @@ import_bis_fx_rates = function(file_path,
                    values_to = "fx_rate"
       ) %>%
       mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+
+
+
+  }
+
+
+  return(filtered_df)
+
+}
+
+
+
+
+#' @title  This function imports BIS CPI index
+#'
+#' @importFrom  readr read_csv cols
+#'
+#' @importFrom zoo as.yearqtr
+#'
+#' @importFrom stats complete.cases
+#'
+#' @importFrom rlang .data
+#'
+#' @importFrom  tidyr pivot_longer
+#'
+#' @importFrom stringr str_replace_all str_remove_all
+#'
+#' @import magrittr
+#'
+#' @import dplyr
+#'
+#' @param file_path string a file path to the source data file
+#'
+#'
+#' @param my_frequency time frequency of the data (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Monthly
+#'  \item Annual
+#' }
+#'
+#' @param unit_of_measure (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Index, 2010 = 100
+#'  \item Year-on-year changes, in per cent
+#' }
+#'
+#' @param pivot_to_long reshape the data to long format? Default is FALSE
+#'
+#' @export
+#'
+#'
+import_bis_cpi_index = function(file_path,
+                               my_frequency = NULL,
+                               my_unit_of_measure = NULL,
+                               pivot_to_long = FALSE) {
+
+
+  . = NULL
+
+  filtered_df = read_csv(file_path, col_types = cols()) %>%
+    select(-.data$`Time Period`) %>%
+    select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
+    rename_all( ~ str_replace_all(., " ", "_")) %>%
+    rename_all( ~ str_replace_all(., "_-_", "_")) %>%
+    rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
+    rename_with(tolower, matches("^[A-Za-z]")) %>%
+    rename(country = reference_area) %>%
+    mutate(country = str_replace_all(.data$country, "\\s", "_"))
+
+
+  for (filter_name in c(
+    "my_frequency",
+    "my_unit_of_measure"
+  )) {
+
+
+    filter_val = get(filter_name)
+
+    if(!is.null(filter_val)){
+
+      filter_name = filter_name %>%
+        str_remove("my_")
+
+      filtered_df = filtered_df %>%
+        filter(!!sym(filter_name) %in% filter_val)
+
+      if(length(filter_val) == 1){
+
+        filtered_df = filtered_df %>%
+          select(-!!sym(filter_name))
+
+      }
+
+
+    }
+
+
+
+
+  }
+
+
+
+  if(pivot_to_long){
+
+    filtered_df = filtered_df %>%
+      pivot_longer(matches("^[0-9]"),
+                   names_to = "date",
+                   values_to = "cpi"
+      )
 
 
 
