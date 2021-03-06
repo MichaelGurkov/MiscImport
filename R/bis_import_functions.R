@@ -24,20 +24,20 @@ import_bis_policy_rates = function(file_path){
 
   . = NULL
 
-  raw_df = read_csv(file_path)
+  filtered_df = read_csv(file_path,col_types = cols()) %>%
+    select(-.data$`Time Period`) %>%
+    select(-.data$`Frequency`) %>%
+    select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
+    rename_all( ~ str_replace_all(., " ", "_")) %>%
+    rename_all( ~ str_replace_all(., "_-_", "_")) %>%
+    rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
+    rename_with(tolower, matches("^[A-Za-z]")) %>%
+    rename(country = "reference_area") %>%
+    mutate(country = str_replace_all(.data$country, "\\s", "_")) %>%
+    pivot_longer(-country,names_to = "date",values_to = "policy_rate") %>%
+    mutate(date = as.yearmon(date))
 
-  clean_df = raw_df %>%
-    select(-.data$FREQ,
-           -.data$REF_AREA,
-           -.data$`Time Period`,
-           -.data$Frequency) %>%
-    rename(country = .data$`Reference area`) %>%
-    pivot_longer(-.data$country, names_to = "date",
-                 values_to = "policy_rate") %>%
-    filter(complete.cases(.)) %>%
-    mutate(date = as.yearmon(.data$date)) %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_"))
-
+  return(filtered_df)
 
 }
 
