@@ -1,0 +1,69 @@
+---
+title: "BIS Locational Banking Statistics data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BIS Locational Banking Statistics data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+
+library(MiscImport)
+
+library(tidyverse)
+
+library(zoo)
+
+```
+
+
+```{r import_lbs_example_data}
+
+lbs_df = import_bis_lbs(
+  file_path = paste0(
+    Sys.getenv("USERPROFILE"),
+    "\\OneDrive - Bank Of Israel\\Data\\BIS",
+    "\\WEBSTATS_LBS_D_PUB_DATAFLOW_csv_col.csv"
+  ),
+  my_measure = "Amounts outstanding / Stocks",
+  my_reporting_country = "United States",
+  my_counterparty_country = "United Kingdom",
+  pivot_to_long = TRUE
+)
+
+lbs_df = lbs_df %>% 
+  filter(date == as.yearqtr("2020 Q1"))
+
+```
+
+
+The purpose of the lbs is to provide information on international banking activity. 
+Ideally we would like to get data from all the countries but because the main action is 
+concentrated in major financial centers we can rely on the data from these major players.
+
+
+
+The locational banking statistics gather quarterly data on international
+financial claims and liabilities of bank offices resident in the reporting countries.
+
+The data is broken down by:
+  * currency 
+  * sector 
+  * country of residence of counterparty 
+  * nationality of reporting banks
+  
+  
+The order of the breakdowns for total international assets and liabilities is as follows: firstly, the positions are disaggregated into domestic and total foreign currency, with a further breakdown of total foreign currency into individual foreign currencies; secondly, a sectoral breakdown (total/non-bank) is applied to the currency components; thirdly, a full country breakdown is requested on top of the breakdowns by currency and sector
+  
+In this system, both domestic and foreign-owned banking offices in the reporting countries record their positions on a gross (unconsolidated) basis, including those vis-à-vis own affiliates, which is consistent with the principles of national accounts,
+balance of payments and external debt statistics.
+
+The locational banking statistics provide for the collection of data on the positions of all banking offices located within the reporting area. Such offices report exclusively on their own (unconsolidated) business, which thus includes international transactions with any of their own affiliates (branches, subsidiaries, joint ventures) located either inside or outside the reporting area. The basic organising principle underlying the reporting system is the residence of the banking office. This conforms with balance of payments and external debt methodology. In addition, data on an ownership or nationality basis are also calculated by regrouping the residence-based data according to countries of origin. 
