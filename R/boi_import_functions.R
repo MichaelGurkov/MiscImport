@@ -302,7 +302,7 @@ import_boi_credit_cards_debt = function(df_filepath = NULL){
 
 #' This function imports bond_market_players share
 #'
-#' @import tydir
+#' @import tidyr
 #'
 #' @import readr
 #'
@@ -340,7 +340,7 @@ import_boi_corp_bond_players = function(file_path = NULL){
 
 #' This function imports corp_bond_market_data
 #'
-#' @import tydir
+#' @import tidyr
 #'
 #' @import readr
 #'
