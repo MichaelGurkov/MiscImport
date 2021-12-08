@@ -10,4 +10,8 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
-Imports:dplyr, magrittr, readr, stringr, zoo, rlang, tidyr
+Imports: dplyr, magrittr, readr, stringr, zoo, rlang, tidyr
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr

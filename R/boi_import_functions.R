@@ -435,8 +435,168 @@ import_boi_corp_bond_market_data = function(file_path = NULL){
 }
 
 
+#' @import readxl
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#' @export
 
-# This function return data format
+import_boi_public_assets_by_asset_class = function(file_path = NULL,
+                                                   download_file = FALSE,
+                                                   pivot_to_long = TRUE){
+
+  names_vec = c(
+    "date",
+    "total_assets",
+    "cash_and_deposits",
+    "gov_bond_traded",
+    "gov_bond_not_traded",
+    "corp_bond_traded",
+    "corp_bond_not_traded",
+    "makam",
+    "stocks_domestics",
+    "deposits_foreign",
+    "bonds_foreign",
+    "stocks_foreign",
+    "other_foreign"
+  )
+
+  if(is.null(file_path)){
+
+    file_path = paste0(Sys.getenv("USERPROFILE"),
+                       "\\OneDrive - Bank Of Israel\\Data",
+                       "\\BoI\\public_assets\\tnc04_h.xls")
+
+
+  }
+
+
+  if(download_file){
+
+    target_link = paste0("https://www.boi.org.il/he/",
+                  "DataAndStatistics/Lists/BoiTablesAndGraphs/tnc04_h.xls")
+
+    download.file(url = target_link,destfile = file_path,mode = "wb")
+
+
+  }
+
+
+  if(is.null(file_path)){
+
+    file_path = paste0(Sys.getenv("USERPROFILE"),
+                                  "\\OneDrive - Bank Of Israel\\Data",
+                                  "\\BoI\\public_assets\\tnc04_h.xls")
+
+
+  }
+
+  raw_df = read_xlsx(file_path,sheet = 2,range = cell_limits(c(11, 2), c(NA, NA)))
+
+  df = raw_df %>%
+    select(-2,-4) %>%
+    set_names(names_vec) %>%
+    mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
+    filter(!is.na(date)) %>%
+    mutate(across(-c(date, total_assets), ~ . * total_assets / 100))
+
+  if(pivot_to_long){
+
+    df = df %>%
+      pivot_longer(-date,names_to = "asset_category")
+
+  }
+
+
+  return(df)
+
+}
+
+
+#' @import readxl
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#' @export
+
+import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
+                                                   download_file = FALSE,
+                                                   pivot_to_long = TRUE){
+
+  names_vec = c(
+    "date",
+    "total_assets-total",
+    "gemel-institutional_holdings",
+    "hishtalmut-institutional_holdings",
+    "pensia_vatikot-institutional_holdings",
+    "pensia_hadashot-institutional_holdings",
+    "bituah_mavtihot_tsua-institutional_holdings",
+    "bituah_mishtatfot_bereavihim-institutional_holdings",
+    "nemanut-institutional_holdings",
+    "cash_and_deposits-direct_holdings",
+    "gov_bond_traded-direct_holdings",
+    "corp_bond_traded-direct_holdings",
+    "stocks_domestics-direct_holdings",
+    "foreign_investments-direct_holdings",
+    "other_assets-direct_holdings"
+
+  )
+
+  if(is.null(file_path)){
+
+    file_path = paste0(Sys.getenv("USERPROFILE"),
+                       "\\OneDrive - Bank Of Israel\\Data",
+                       "\\BoI\\public_assets\\tnc07_h.xls")
+
+
+  }
+
+
+  if(download_file){
+
+    target_link = paste0("https://www.boi.org.il/he/",
+                         "DataAndStatistics/Lists/BoiTablesAndGraphs/tnc04_h.xls")
+
+    download.file(url = target_link,destfile = file_path,mode = "wb")
+
+
+  }
+
+
+  raw_df = read_xlsx(file_path,sheet = 2,range = cell_limits(c(11, 2), c(NA, NA)))
+
+  df = raw_df %>%
+    select(-2,-4,-12,-13,-14) %>%
+    set_names(names_vec) %>%
+    mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
+    filter(!is.na(date)) %>%
+    mutate(across(-c(date, `total_assets-total`), ~ . * `total_assets-total` / 100))
+
+  if(pivot_to_long){
+
+    df = df %>%
+      pivot_longer(-date,names_to = "asset_category") %>%
+      separate(col = asset_category,into = c("asset_category","investment_vehicle"),
+               sep = "-")
+
+  }
+
+
+  return(df)
+
+}
+
+
+
+# This function returns data format
 
 return_datafile_format = function(data_freq = "month",
                                   data_type = "debt"){
