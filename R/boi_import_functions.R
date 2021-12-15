@@ -435,6 +435,8 @@ import_boi_corp_bond_market_data = function(file_path = NULL){
 }
 
 
+#' @title  This function returns public assets data categorized by asset class
+#'
 #' @import readxl
 #'
 #' @import tidyr
@@ -517,6 +519,8 @@ import_boi_public_assets_by_asset_class = function(file_path = NULL,
 }
 
 
+#' @title  This function returns public assets data categorized by investment vehicle
+#'
 #' @import readxl
 #'
 #' @import tidyr
@@ -594,7 +598,106 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
 
 }
 
+#' @title  This is an auxiliary function that returns generic institutional investors flows
+#' accounting
+#'
+#' @import readxl
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#'
 
+import_boi_institutional_generic_flows = function(file_path = NULL,
+                                                  target_link = NULL,
+                                                  data_type = "assets_composition",
+                                                  pivot_to_long = TRUE){
+
+  names_vec = c(
+    "date",
+    "deposits",
+    "withdrawals",
+    "accumulated_savings",
+    "gov_bond-traded",
+    "gov_bond-earmarked",
+    "corp_bond-traded",
+    "corp_bond-non_traded",
+    "stocks-traded",
+    "stocks-non_traded",
+    "stocks-etf",
+    "bond-etf",
+    "foreign",
+    "cash_and_deposits-linked",
+    "cash_and_deposits-nominal",
+    "makam",
+    "other_payments"
+  )
+
+  if(!is.null(target_link)){
+
+    download.file(url = target_link,destfile = file_path,mode = "wb")
+
+
+  }
+
+
+  raw_df = read_xls(file_path,sheet = 1,range = cell_limits(c(8, 1), c(NA, NA)))
+
+  empty_cols = c(5,8,11,14)
+
+  df = raw_df %>%
+    select(-empty_cols) %>%
+    set_names(names_vec) %>%
+    mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
+    filter(!is.na(date))
+
+  if(pivot_to_long & data_type == "assets_composition"){
+
+    df = df %>%
+      select(-c("deposits","withdrawals","accumulated_savings")) %>%
+      pivot_longer(-date,names_to = "asset_category") %>%
+      separate(col = asset_category,into = c("asset_category","asset_characteristic"),
+               sep = "-")
+
+  }
+
+  if(pivot_to_long & data_type == "total_flows"){
+
+    df = df %>%
+      select(c("date","deposits","withdrawals","accumulated_savings")) %>%
+      pivot_longer(-date,names_to = "flow_category")
+
+  }
+
+
+  return(df)
+
+}
+#' @title  This function returns institutional investors flows accounting
+#'
+#' @import readxl
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#' @export
+#'
+
+import_boi_institutional_investors_flows = function(download_file = FALSE,
+                                                    data_type = "assets_composition",
+                                                    pivot_to_long = TRUE){
+
+files_table = tribble(~category,~temp_file_path,~temp_target_link)
+
+
+
+}
 
 # This function returns data format
 
