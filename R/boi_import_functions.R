@@ -435,6 +435,8 @@ import_boi_corp_bond_market_data = function(file_path = NULL){
 }
 
 
+#' @title  This function returns public assets data categorized by asset class
+#'
 #' @import readxl
 #'
 #' @import tidyr
@@ -517,6 +519,8 @@ import_boi_public_assets_by_asset_class = function(file_path = NULL,
 }
 
 
+#' @title  This function returns public assets data categorized by investment vehicle
+#'
 #' @import readxl
 #'
 #' @import tidyr
@@ -594,7 +598,168 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
 
 }
 
+#' @title  This is an auxiliary function that returns generic institutional
+#' investors flows accounting
+#'
+#' @import readxl
+#'
+#' @import stringr
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#'
 
+import_boi_institutional_generic_flows = function(file_path = NULL,
+                                                  target_link = NULL,
+                                                  generic_data_type,
+                                                  pivot_to_long = TRUE){
+
+  names_vec = c(
+    "date",
+    "deposits",
+    "withdrawals",
+    "accumulated_savings",
+    "gov_bond-traded",
+    "gov_bond-earmarked",
+    "corp_bond-traded",
+    "corp_bond-non_traded",
+    "stocks-traded",
+    "stocks-non_traded",
+    "stocks-etf",
+    "bond-etf",
+    "foreign",
+    "cash_and_deposits-linked",
+    "cash_and_deposits-nominal",
+    "makam",
+    "other_payments"
+  )
+
+  if(!is.null(target_link)){
+
+    download.file(url = target_link,destfile = file_path,mode = "wb")
+
+
+  }
+
+
+  raw_df = read_xls(file_path,sheet = 1,range = cell_limits(c(8, 1), c(NA, NA)))
+
+  empty_cols = c(5,8,11,14)
+
+  df = raw_df %>%
+    select(-empty_cols) %>%
+    set_names(names_vec) %>%
+    mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
+    filter(!is.na(date))
+
+  if(pivot_to_long & generic_data_type == "assets_composition"){
+
+    df = df %>%
+      select(-c("deposits","withdrawals","accumulated_savings")) %>%
+      pivot_longer(-date,names_to = "asset_category") %>%
+      separate(col = asset_category,into = c("asset_category","asset_characteristic"),
+               sep = "-")
+
+  }
+
+  if(pivot_to_long & generic_data_type == "total_flows"){
+
+    df = df %>%
+      select(c("date","deposits","withdrawals","accumulated_savings")) %>%
+      pivot_longer(-date,names_to = "flow_category")
+
+  }
+
+
+  return(df)
+
+}
+
+#' @title  This function returns institutional investors flows accounting
+#'
+#' @import readxl
+#'
+#' @import stringr
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#' @export
+#'
+
+import_boi_institutional_investors_flows = function(download_file = FALSE,
+                                                    data_type = "assets_composition",
+                                                    pivot_to_long = TRUE){
+
+  files_table = tribble(
+    ~ category,
+    ~ temp_target_link,
+    "pensia_vatikot",
+    "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce19_h.xls",
+    "pensia_mekifot_hadashot",
+    "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce21_h.xls",
+    "pensia_claliot_hadashot",
+    "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce23_h.xls"
+  )
+
+
+
+
+  files_table = files_table %>%
+    mutate(temp_file_path = map_chr(temp_target_link,
+                                    ~str_extract(.,pattern = "shce.*$"))) %>%
+    mutate(temp_file_path = paste0(Sys.getenv("USERPROFILE"),
+                                   "\\OneDrive - Bank Of Israel\\Data",
+                                   "\\BoI\\institutional_investors\\",
+                                   temp_file_path))
+
+
+  if(download_file){
+
+
+    df =  files_table %>%
+      pmap_dfr(function(category,temp_target_link,temp_file_path){
+
+        temp_df = import_boi_institutional_generic_flows(
+          file_path = temp_file_path,
+          target_link = temp_target_link,
+          generic_data_type = data_type) %>%
+          mutate(investor_category = category)
+
+
+      })
+
+
+  }
+  else {
+
+
+    df =  files_table %>%
+      pmap_dfr(function(category,temp_target_link,temp_file_path){
+
+        temp_df = import_boi_institutional_generic_flows(
+          temp_file_path,
+          generic_data_type = data_type) %>%
+          mutate(investor_category = category)
+
+
+      })
+
+  }
+
+
+  return(df)
+
+
+
+}
 
 # This function returns data format
 
