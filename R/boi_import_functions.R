@@ -598,8 +598,9 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
 
 }
 
-#' @title  This is an auxiliary function that returns generic institutional
-#' investors flows accounting
+
+#' @title  This is an auxiliary function that returns generic pension funds flows
+#' accounting
 #'
 #' @import readxl
 #'
@@ -615,10 +616,10 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
 #'
 #'
 
+
 import_boi_pension_generic_flows = function(file_path = NULL,
                                                   target_link = NULL,
-                                                  generic_data_type,
-                                                  pivot_to_long = TRUE){
+                                                  generic_data_type){
 
   names_vec = c(
     "date",
@@ -658,17 +659,17 @@ import_boi_pension_generic_flows = function(file_path = NULL,
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     filter(!is.na(date))
 
-  if(pivot_to_long & generic_data_type == "assets_composition"){
+  if(pivot_to_long & data_type == "assets_composition"){
 
     df = df %>%
       select(-c("deposits","withdrawals","accumulated_savings")) %>%
-      pivot_longer(-date,names_to = "asset_class") %>%
-      separate(col = asset_class,into = c("asset_class","asset_characteristic"),
+      pivot_longer(-date,names_to = "asset_category") %>%
+      separate(col = asset_category,into = c("asset_category","asset_characteristic"),
                sep = "-")
 
   }
 
-  if(pivot_to_long & generic_data_type == "total_flows"){
+  if(pivot_to_long & data_type == "total_flows"){
 
     df = df %>%
       select(c("date","deposits","withdrawals","accumulated_savings")) %>%
@@ -769,6 +770,7 @@ import_boi_pension_generic_balance = function(file_path = NULL,
 #'
 #' @export
 #'
+
 
 import_boi_pension_funds_flows = function(download_file = FALSE,
                                                     data_type = "assets_composition",
@@ -913,8 +915,6 @@ import_boi_pension_funds_balance = function(download_file = FALSE,
 
 
   return(df)
-
-
 
 }
 
