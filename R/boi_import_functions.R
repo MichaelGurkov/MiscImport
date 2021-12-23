@@ -279,18 +279,30 @@ import_boi_debt_df = function(debt_df_filepath = NULL,
 #'
 #' @export
 #'
-import_boi_debt_by_sectors_df = function(debt_sectors_df_filepath = NULL){
+import_boi_debt_by_sectors_df = function(file_path = NULL,
+                                         download_file = FALSE){
 
-  if(is.null(debt_sectors_df_filepath)){
+  source_link = paste0("https://www.boi.org.il/he/DataAndStatistics",
+                       "/Lists/BoiTablesAndGraphs/itra_hov_bs.xlsx")
 
-    debt_sectors_df_filepath = paste0(
+  if(is.null(file_path)){
+
+    file_path = paste0(
       file.path(Sys.getenv("USERPROFILE")),
       "\\OneDrive - Bank Of Israel\\Data\\",
       "BoI\\Credit\\itra_hov_bs.xlsx")
   }
 
 
-  df = read_xlsx(debt_sectors_df_filepath, sheet = 1) %>%
+  if(download_file){
+
+    download.file(url = source_link,destfile =  file_path,mode = "wb")
+
+
+  }
+
+
+  df = read_xlsx(file_path, sheet = 1) %>%
     select(matches("[A-Z]")) %>%
     rename_all(tolower) %>%
     rename_all(~str_replace_all(.,"\\s","_")) %>%
@@ -479,10 +491,10 @@ import_boi_public_assets_by_asset_class = function(file_path = NULL,
 
   if(download_file){
 
-    target_link = paste0("https://www.boi.org.il/he/",
+    source_link = paste0("https://www.boi.org.il/he/",
                   "DataAndStatistics/Lists/BoiTablesAndGraphs/tnc04_h.xls")
 
-    download.file(url = target_link,destfile = file_path,mode = "wb")
+    download.file(url = source_link,destfile = file_path,mode = "wb")
 
 
   }
@@ -566,10 +578,10 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
 
   if(download_file){
 
-    target_link = paste0("https://www.boi.org.il/he/",
+    source_link = paste0("https://www.boi.org.il/he/",
                          "DataAndStatistics/Lists/BoiTablesAndGraphs/tnc04_h.xls")
 
-    download.file(url = target_link,destfile = file_path,mode = "wb")
+    download.file(url = source_link,destfile = file_path,mode = "wb")
 
 
   }
@@ -618,7 +630,7 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
 
 
 import_boi_pension_generic_flows = function(file_path = NULL,
-                                                  target_link = NULL,
+                                                  source_link = NULL,
                                                   generic_data_type){
 
   names_vec = c(
@@ -641,9 +653,9 @@ import_boi_pension_generic_flows = function(file_path = NULL,
     "other_payments"
   )
 
-  if(!is.null(target_link)){
+  if(!is.null(source_link)){
 
-    download.file(url = target_link,destfile = file_path,mode = "wb")
+    download.file(url = source_link,destfile = file_path,mode = "wb")
 
 
   }
@@ -699,7 +711,7 @@ import_boi_pension_generic_flows = function(file_path = NULL,
 #'
 
 import_boi_pension_generic_balance = function(file_path = NULL,
-                                                  target_link = NULL,
+                                                  source_link = NULL,
                                                   generic_data_type,
                                                   pivot_to_long = TRUE){
 
@@ -722,9 +734,9 @@ import_boi_pension_generic_balance = function(file_path = NULL,
   )
 
 
-  if(!is.null(target_link)){
+  if(!is.null(source_link)){
 
-    download.file(url = target_link,destfile = file_path,mode = "wb")
+    download.file(url = source_link,destfile = file_path,mode = "wb")
 
 
   }
@@ -778,7 +790,7 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
 
   files_table = tribble(
     ~ category,
-    ~ temp_target_link,
+    ~ temp_source_link,
     "pensia_vatikot",
     "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce19_h.xls",
     "pensia_mekifot_hadashot",
@@ -791,7 +803,7 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
 
 
   files_table = files_table %>%
-    mutate(temp_file_path = map_chr(temp_target_link,
+    mutate(temp_file_path = map_chr(temp_source_link,
                                     ~str_extract(.,pattern = "shce.*$"))) %>%
     mutate(temp_file_path = paste0(Sys.getenv("USERPROFILE"),
                                    "\\OneDrive - Bank Of Israel\\Data",
@@ -803,11 +815,11 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
 
 
     df =  files_table %>%
-      pmap_dfr(function(category,temp_target_link,temp_file_path){
+      pmap_dfr(function(category,temp_source_link,temp_file_path){
 
         temp_df = import_boi_pension_generic_flows(
           file_path = temp_file_path,
-          target_link = temp_target_link,
+          source_link = temp_source_link,
           generic_data_type = data_type) %>%
           mutate(investor_type = category)
 
@@ -820,7 +832,7 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
 
 
     df =  files_table %>%
-      pmap_dfr(function(category,temp_target_link,temp_file_path){
+      pmap_dfr(function(category,temp_source_link,temp_file_path){
 
         temp_df = import_boi_pension_generic_flows(
           temp_file_path,
@@ -862,7 +874,7 @@ import_boi_pension_funds_balance = function(download_file = FALSE,
 
   files_table = tribble(
     ~ category,
-    ~ temp_target_link,
+    ~ temp_source_link,
     "pensia_vatikot",
     "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce16_h.xls",
     "pensia_mekifot_hadashot",
@@ -875,7 +887,7 @@ import_boi_pension_funds_balance = function(download_file = FALSE,
 
 
   files_table = files_table %>%
-    mutate(temp_file_path = map_chr(temp_target_link,
+    mutate(temp_file_path = map_chr(temp_source_link,
                                     ~str_extract(.,pattern = "shce.*$"))) %>%
     mutate(temp_file_path = paste0(Sys.getenv("USERPROFILE"),
                                    "\\OneDrive - Bank Of Israel\\Data",
@@ -887,11 +899,11 @@ import_boi_pension_funds_balance = function(download_file = FALSE,
 
 
     df =  files_table %>%
-      pmap_dfr(function(category,temp_target_link,temp_file_path){
+      pmap_dfr(function(category,temp_source_link,temp_file_path){
 
         temp_df = import_boi_pension_generic_balance(
           file_path = temp_file_path,
-          target_link = temp_target_link) %>%
+          source_link = temp_source_link) %>%
           mutate(investor_type = category)
 
 
@@ -903,7 +915,7 @@ import_boi_pension_funds_balance = function(download_file = FALSE,
 
 
     df =  files_table %>%
-      pmap_dfr(function(category,temp_target_link,temp_file_path){
+      pmap_dfr(function(category,temp_source_link,temp_file_path){
 
         temp_df = import_boi_pension_generic_balance(temp_file_path) %>%
           mutate(investor_type = category)
