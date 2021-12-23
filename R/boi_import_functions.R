@@ -1,5 +1,227 @@
 utils::globalVariables("where")
 
+
+#' @title Import institutional investor foreign assets exposure balance
+#'
+#' @description This function imports institutional investor
+#' foreign assets exposure balance (in millions USD)
+#'
+#' @import readxl
+#'
+#' @importFrom zoo as.yearmon
+#'
+#' @import dplyr
+#'
+#' @import tidyr
+#'
+#' @param report_category a string. Either ""balance" or "flows"
+
+import_boi_institutional_foreign_assets_exposure = function(file_path = NULL,
+                                                     download_file = FALSE,
+                                                     pivot_to_long = TRUE) {
+
+  file_name = "mosadiyim_l2h.xlsx"
+
+  source_link = paste0(
+    "https://www.boi.org.il/he",
+    "/DataAndStatistics/Lists",
+    "/BoiTablesAndGraphs/", file_name)
+
+  row_indices_list = list(17:21, 23:27, 29:33, 35:39, 41:45) %>%
+    map( ~ . - 2) # offset to start at row 3
+
+  names(row_indices_list) = c(
+    "gemel_hishtalmut",
+    "pensia_hadashot",
+    "pensia_vatikot",
+    "bituah_mishtatfot_bereavihim",
+    "bituah_mavtihot_tsua"
+  )
+
+  cell_limits = cell_limits(ul = c(2, 2),
+                            lr = c(NA_integer_,
+                                   NA_integer_))
+
+  categories = c(
+    "balance_assets",
+    "derivative_assets",
+    "exposure",
+    "total_assets",
+    "exposure_rate"
+  )
+
+  if (is.null(file_path)) {
+    file_path = paste0(
+      Sys.getenv("USERPROFILE"),
+      "\\OneDrive - Bank Of Israel\\Data",
+      "\\BoI\\institutional_investors\\",file_name)
+
+  }
+
+
+  if (download_file) {
+    download.file(url = source_link,
+                  destfile = file_path,
+                  mode = "wb")
+
+  }
+
+
+  raw_df = read_xlsx(file_path, range = cell_limits)
+
+  df = map_dfr(row_indices_list, function(temp_ind) {
+    temp_df = raw_df %>%
+      slice(c(1, temp_ind)) %>%
+      t() %>%
+      as_tibble(.name_repair = "minimal") %>%
+      set_names(c("date", categories))
+
+  },
+  .id = "investor_type")
+
+
+  df = df %>%
+    mutate(date = as.yearmon(date, format = "%m-%y")) %>%
+    mutate(across(-c("investor_type", "date"), as.numeric))
+
+  if (pivot_to_long) {
+    df = df %>%
+      pivot_longer(-c("investor_type", "date"),
+                   names_to = "category")
+
+  }
+
+  return(df)
+
+
+}
+
+
+#' @title Import institutional investor FX exposure
+#'
+#' @description This function imports institutional investor
+#' FX exposure
+#'
+#' @import readxl
+#'
+#' @importFrom zoo as.yearmon
+#'
+#' @import dplyr
+#'
+#' @import tidyr
+#'
+#' @param report_category a string. Either ""balance" or "flows"
+
+import_boi_institutional_FX_exposure = function(file_path = NULL,
+                                                     download_file = FALSE,
+                                                     pivot_to_long = TRUE,
+                                                     report_category) {
+
+  file_name = "mosadiyim_l1h.xlsx"
+
+  cell_limits = cell_limits(ul = c(2, 2),
+                            lr = c(NA_integer_,
+                                   NA_integer_))
+
+  source_link = paste0(
+    "https://www.boi.org.il/he",
+    "/DataAndStatistics/Lists",
+    "/BoiTablesAndGraphs/", file_name)
+
+  if (is.null(file_path)) {
+    file_path = paste0(
+      Sys.getenv("USERPROFILE"),
+      "\\OneDrive - Bank Of Israel\\Data",
+      "\\BoI\\institutional_investors\\",file_name)
+
+  }
+
+  if (download_file) {
+    download.file(url = source_link,
+                  destfile = file_path,
+                  mode = "wb")
+
+  }
+
+  if(report_category == "balance"){
+
+   sheet_ind = 1
+
+    row_indices_list = list(19:24, 26:31, 33:38, 40:45, 47:52) %>%
+      map( ~ . - 2) # offset to start at row 3
+
+    categories = c(
+      "balance_assets",
+      "derivative_assets",
+      "exposure",
+      "total_assets",
+      "balance_exposure_rate",
+      "total_exposure_rate"
+    )
+
+
+  }
+
+  if(report_category == "flows"){
+
+    sheet_ind = 2
+
+    row_indices_list = list(15:18, 20:23, 25:28, 30:33, 35:38) %>%
+      map( ~ . - 2) # offset to start at row 3
+
+
+    categories = c(
+      "balance_assets",
+      "derivative_assets",
+      "exposure",
+      "total_assets"
+    )
+
+
+  }
+
+
+  names(row_indices_list) = c(
+    "gemel_hishtalmut",
+    "pensia_hadashot",
+    "pensia_vatikot",
+    "bituah_mishtatfot_bereavihim",
+    "bituah_mavtihot_tsua"
+  )
+
+
+  raw_df = read_xlsx(file_path, range = cell_limits, sheet = sheet_ind)
+
+  df = map_dfr(row_indices_list, function(temp_ind) {
+    temp_df = raw_df %>%
+      slice(c(1, temp_ind)) %>%
+      t() %>%
+      as_tibble(.name_repair = "minimal") %>%
+      set_names(c("date", categories))
+
+  },
+  .id = "investor_type")
+
+
+  df = df %>%
+    mutate(date = as.yearmon(date, format = "%m-%y")) %>%
+    mutate(across(-c("investor_type", "date"), as.numeric))
+
+  if (pivot_to_long) {
+    df = df %>%
+      pivot_longer(-c("investor_type", "date"),
+                   names_to = "category")
+
+  }
+
+  return(df)
+
+
+
+}
+
+
+
 #' @title Import Oracle format financial report data
 #'
 #' @description  This function imports financial report data from Oracle format
@@ -626,8 +848,6 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
 #'
 #' @import lubridate
 #'
-#'
-
 
 import_boi_pension_generic_flows = function(file_path = NULL,
                                                   source_link = NULL,

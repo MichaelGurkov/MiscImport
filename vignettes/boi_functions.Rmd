@@ -1,0 +1,53 @@
+---
+title: "Bank of Israel data import functions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{boi_functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE, echo = FALSE, message = FALSE, warning = FALSE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(MiscImport)
+```
+
+The `import_boi_*` family of functions is designed to download data from
+Bank of Israel website. The data is divided by topics.
+
+# Institutional investors
+
+Institutional investors consist of the following types:
+
+* Pension funds
+* Providence (gemel and hishtalmut) funds 
+* Insurance companies
+
+## Summary data
+
+The summary data section presents summary data (on all investor types) 
+according to the following segmentaion:
+
+* Tradability - monthly data that distinguishes between traded and non traded
+assets.
+
+* Distribution of local currency (ILS) assets of institutional investors
+
+* The total (domestic and foreign) asset class distribution of the portfolio
+of institutional investors
+
+* Linkage - monthly data that distinguishes between various (CPI or FX) 
+linkages.
+
+
+
+```{r}
+
+```
+
