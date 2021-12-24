@@ -765,7 +765,7 @@ import_boi_public_assets_by_asset_class = function(file_path = NULL,
 #'
 #' @export
 
-import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
+import_boi_public_assets_by_institution_type = function(file_path = NULL,
                                                    download_file = FALSE,
                                                    pivot_to_long = TRUE){
 
@@ -788,11 +788,13 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
 
   )
 
+  file_name = "tnc07_h.xls"
+
   if(is.null(file_path)){
 
     file_path = paste0(Sys.getenv("USERPROFILE"),
                        "\\OneDrive - Bank Of Israel\\Data",
-                       "\\BoI\\public_assets\\tnc07_h.xls")
+                       "\\BoI\\public_assets\\", file_name)
 
 
   }
@@ -801,7 +803,8 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
   if(download_file){
 
     source_link = paste0("https://www.boi.org.il/he/",
-                         "DataAndStatistics/Lists/BoiTablesAndGraphs/tnc04_h.xls")
+                         "DataAndStatistics/Lists/BoiTablesAndGraphs/",
+                         file_name)
 
     download.file(url = source_link,destfile = file_path,mode = "wb")
 
@@ -816,7 +819,8 @@ import_boi_public_assets_by_investment_vehicle = function(file_path = NULL,
     set_names(names_vec) %>%
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     filter(!is.na(date)) %>%
-    mutate(across(-c(date, `total_assets-total`), ~ . * `total_assets-total` / 100))
+    mutate(across(-c(date, `total_assets-total`),
+                  ~ . * `total_assets-total` / 100))
 
   if(pivot_to_long){
 
