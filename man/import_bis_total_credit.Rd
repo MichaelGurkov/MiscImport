@@ -11,7 +11,8 @@ import_bis_total_credit(
   my_lending_sector = NULL,
   my_valuation = NULL,
   my_unit_type = NULL,
-  my_type_of_adjustment = NULL
+  my_type_of_adjustment = NULL,
+  pivot_to_long = FALSE
 )
 }
 \arguments{
@@ -62,6 +63,8 @@ available options are:
  \item Adjusted for breaks
  \item Unadjusted for breaks
 }}
+
+\item{pivot_to_long}{reshape the data to long format? Default is FALSE}
 }
 \description{
 This function imports total credit to private sector from BIS format

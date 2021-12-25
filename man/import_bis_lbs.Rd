@@ -12,11 +12,8 @@ import_bis_lbs(
   my_type_of_instruments = NULL,
   my_currency_denomination = NULL,
   my_currency_type_of_reporting_country = NULL,
-<<<<<<< HEAD
   my_parent_country = NULL,
   my_type_of_reporting_institutions = NULL,
-=======
->>>>>>> c43a4d9bde6b20aaea7a8dfd5b71769f4db8af9c
   my_reporting_country = NULL,
   my_counterparty_sector = NULL,
   my_counterparty_country = NULL,
@@ -80,7 +77,6 @@ available options are:
  \item Unclassified currency
 }}
 
-<<<<<<< HEAD
 \item{my_parent_country}{string}
 
 \item{my_type_of_reporting_institutions}{(default is NULL),
@@ -92,8 +88,6 @@ available options are:
  \item Foreign subsidiaries
 }}
 
-=======
->>>>>>> c43a4d9bde6b20aaea7a8dfd5b71769f4db8af9c
 \item{my_reporting_country}{string}
 
 \item{my_counterparty_sector}{(default is NULL),
@@ -123,11 +117,8 @@ available options are:
 }}
 
 \item{pivot_to_long}{reshape the data to long format? Default is FALSE}
-<<<<<<< HEAD
 
 \item{counterparty_country}{string}
-=======
->>>>>>> c43a4d9bde6b20aaea7a8dfd5b71769f4db8af9c
 }
 \description{
 This function imports locational banking statistics from BIS format
