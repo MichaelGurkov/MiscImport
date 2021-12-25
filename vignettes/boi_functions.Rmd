@@ -46,8 +46,22 @@ of institutional investors
 linkages.
 
 
+## 
+
 
 ```{r}
 
 ```
 
+
+
+
+
+# Public assets
+
+The data is segmented by the following categories:
+ 
+ * Asset class
+ * Maturities
+ * Tradability
+ * Institution type
