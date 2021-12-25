@@ -1,6 +1,160 @@
 utils::globalVariables("where")
 
 
+#' @title Import institutional investor portfolio by asset class
+#'
+#' @description This function imports institutional investor
+#' investor portfolio by asset class (in millions USD)
+#'
+#' @import readxl
+#'
+#' @importFrom zoo as.yearmon
+#'
+#' @import dplyr
+#'
+#' @import tidyr
+#'
+#' @export
+#'
+
+import_boi_institutional_portolio_asset_class = function(file_path = NULL,
+                                                         download_file = FALSE,
+                                                         pivot_to_long = TRUE){
+
+  import_temp_sheet = function(temp_file_path,temp_sheet_name,
+                               temp_cell_range = NULL){
+
+    col_names_vec = c(
+      "total_assets",
+      "gov_bond-traded",
+      "gov_bond-non_traded",
+      "corp_bond-traded",
+      "corp_bond-non_traded",
+      "stocks-traded",
+      "stocks-non_traded",
+      "stocks-etf",
+      "bond-etf",
+      "foreign",
+      "cash_and_deposits-linked",
+      "cash_and_deposits-nominal",
+      "makam",
+      "other_assets"
+    )
+
+    investor_types_vec = c(
+      "gemel",
+      "hishtalmut",
+      "pensia_vatikot",
+      "pensia_claliot_hadashot",
+      "pensia_mekifot_hadashot",
+      "nemanut",
+      "bituah_mishtatfot_bereavihim",
+      "bituah_mavtihot_tsua",
+      "total"
+    )
+
+    empty_cols = c(5,8,11) - 1 # offset to start at column 2
+
+    if(is.null(temp_cell_range)){
+
+      temp_cell_range = cell_limits(ul = c(9,2),
+                                    lr = c(NA_integer_,NA_integer_))
+
+      }
+
+    raw_df = suppressMessages(read_xls(temp_file_path,sheet = temp_sheet_name,
+                                range = temp_cell_range))
+
+    temp_df = raw_df %>%
+      select(-empty_cols) %>%
+      filter(complete.cases(.)) %>%
+      set_names(col_names_vec) %>%
+      mutate(across(-total_assets, ~ . / 100 * total_assets)) %>%
+      select(-total_assets)
+
+    if(temp_sheet_name == "2001"){
+
+      investor_types_column = rep(str_subset(investor_types_vec,"bituah",
+                                             negate = TRUE),11)
+      investor_types_column = c(investor_types_column, investor_types_vec)
+
+
+      months_column = c(rep(month.abb[-12],each = 7),rep("Dec",9))
+
+    } else {
+
+      investor_types_column = rep(investor_types_vec,
+                                  (nrow(temp_df) / length(investor_types_vec)))
+
+      months_column = rep(month.abb,
+                          each = length(investor_types_vec))[1:nrow(temp_df)]
+
+
+    }
+
+
+
+    temp_df = temp_df %>%
+      mutate(investor_type = investor_types_column) %>%
+      mutate(date = months_column) %>%
+      mutate(date = as.yearmon(paste(date, temp_sheet_name))) %>%
+      relocate(date, investor_type)
+
+    return(temp_df)
+
+
+    return(temp_df)
+
+
+  }
+
+  file_name = "shce28_h.xls"
+
+  source_link = paste0(
+    "https://www.boi.org.il/he/",
+    "DataAndStatistics/Lists/BoiTablesAndGraphs/",
+    file_name)
+
+
+  if (is.null(file_path)) {
+
+    file_path = paste0(
+      Sys.getenv("USERPROFILE"),
+      "\\OneDrive - Bank Of Israel\\Data",
+      "\\BoI\\institutional_investors\\",file_name)
+
+  }
+
+  if (download_file) {
+    download.file(url = source_link,
+                  destfile = file_path,
+                  mode = "wb")
+
+  }
+
+
+  df = map_dfr(excel_sheets(file_path),
+           import_temp_sheet,temp_file_path = file_path)
+
+
+  if(pivot_to_long){
+
+    df = df %>%
+      pivot_longer(-c(date, investor_type),names_to = "asset_class")
+
+  }
+
+
+  return(df)
+
+
+
+
+
+}
+
+
+
 #' @title Import institutional investor foreign assets exposure balance
 #'
 #' @description This function imports institutional investor
@@ -739,13 +893,6 @@ import_boi_public_assets_by_asset_class = function(file_path = NULL,
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     filter(!is.na(date)) %>%
     mutate(across(-c(date, total_assets), ~ . * total_assets / 100))
-
-  if(pivot_to_long){
-
-    df = df %>%
-      pivot_longer(-date,names_to = "asset_class")
-
-  }
 
 
   return(df)

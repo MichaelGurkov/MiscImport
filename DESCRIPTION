@@ -13,5 +13,7 @@ RoxygenNote: 7.1.1
 Imports: dplyr, magrittr, readr, stringr, zoo, rlang, tidyr
 Suggests: 
     rmarkdown,
-    knitr
+    knitr,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
+Config/testthat/edition: 3
