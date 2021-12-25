@@ -1,0 +1,97 @@
+---
+title: "institutional_investors"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{institutional_investors}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE, echo = FALSE, message = FALSE, warning = FALSE,
+  fig.width = 5,
+  comment = "#>"
+)
+```
+
+```{r setup}
+
+library(MiscImport)
+
+library(tidyverse)
+```
+
+# Institutional Investors portfolio
+
+```{r import_portfolio_data}
+
+portfolio_df = import_boi_institutional_portolio_asset_class()
+
+corp_bonds_df = import_boi_corporate_bonds_holdings()
+
+```
+
+Summing up all the assets we can see the growth in assets under management of institutional investors
+
+```{r plot_total_assets}
+
+portfolio_df %>% 
+  group_by(date) %>% 
+  summarise(value = sum(value), .groups = "drop") %>% 
+  ggplot(aes(x = date, y = value)) + 
+  geom_line() + 
+  scale_y_continuous(labels = scales::comma_format(scale = 10 ^ -3)) + 
+  xlab(NULL) + ylab("ILS billions") + 
+  ggtitle("Assets under management of institutional investors")
+
+```
+
+```{r plot_market_share}
+
+portfolio_df %>% 
+  filter(date == max(date)) %>% 
+  group_by(investor_type) %>% 
+  summarise(value = sum(value), .groups = "drop") %>% 
+  mutate(market_share = value / sum(value)) %>% 
+  ggplot(aes(x = market_share, y = reorder(investor_type, market_share))) + 
+  geom_col() + 
+  scale_x_continuous(labels = scales::percent_format()) + 
+  xlab(NULL) + ylab(NULL) + ggtitle("Share of AUM by investor type")
+  
+
+```
+
+```{r plot_share_corp_bonds_aum}
+
+portfolio_df %>% 
+  filter(date == max(date)) %>% 
+  filter(str_detect(asset_class, "corp")) %>% 
+  group_by(investor_type) %>% 
+  summarise(value = sum(value), .groups = "drop") %>% 
+  mutate(market_share = value / sum(value)) %>% 
+  ggplot(aes(x = market_share, y = reorder(investor_type, market_share))) + 
+  geom_col() + 
+  scale_x_continuous(labels = scales::percent_format()) + 
+  xlab(NULL) + ylab(NULL) + 
+  ggtitle("Share of corporate bonds AUM by investor type")
+
+```
+
+
+```{r plot_share_corp_bonds_traded}
+
+corp_bonds_df %>% 
+  filter(date == max(date)) %>% 
+  mutate(market_share = value / sum(value)) %>% 
+  ggplot(aes(x = market_share, y = reorder(investor_type, market_share))) + 
+  geom_col() + 
+  geom_text(aes(label = paste0(round(market_share * 100),"%")),
+            hjust = -0.25) + 
+  scale_x_continuous(labels = scales::percent_format()) + 
+  xlab(NULL) + ylab(NULL) + 
+  ggtitle("Share of traded corporate bonds by investor type")
+
+
+```
+

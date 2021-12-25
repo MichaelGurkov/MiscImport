@@ -32,15 +32,15 @@ Institutional investors consist of the following types:
 ## Summary data
 
 The summary data section presents summary data (on all investor types) 
-according to the following segmentaion:
+according to the following segmentation:
 
 * Tradability - monthly data that distinguishes between traded and non traded
-assets.
+assets
 
 * Distribution of local currency (ILS) assets of institutional investors
 
-* The total (domestic and foreign) asset class distribution of the portfolio
-of institutional investors
+* **The total (domestic and foreign) asset class distribution of the portfolio
+of institutional investors**
 
 * Linkage - monthly data that distinguishes between various (CPI or FX) 
 linkages.
