@@ -833,7 +833,14 @@ import_boi_public_assets_by_institution_type = function(file_path = NULL,
 
 import_boi_pension_generic_flows = function(file_path = NULL,
                                             source_link = NULL,
+                                            generic_pivot_to_long,
                                             generic_data_type){
+
+  if(!generic_data_type %in% c("assets_composition","total_flows")){
+
+    stop("data_type argument must be either assets_composition or total_flows")
+  }
+
 
   names_vec = c(
     "date",
@@ -863,7 +870,8 @@ import_boi_pension_generic_flows = function(file_path = NULL,
   }
 
 
-  raw_df = read_xls(file_path,sheet = 1,range = cell_limits(c(8, 1), c(NA, NA)))
+  raw_df = suppressMessages(read_xls(file_path,sheet = 1,
+                                     range = cell_limits(c(8, 1), c(NA, NA))))
 
   empty_cols = c(5,8,11,14)
 
@@ -873,17 +881,15 @@ import_boi_pension_generic_flows = function(file_path = NULL,
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     filter(!is.na(date))
 
-  if(pivot_to_long & data_type == "assets_composition"){
+  if(generic_pivot_to_long & generic_data_type == "assets_composition"){
 
     df = df %>%
-      select(-c("deposits","withdrawals","accumulated_savings")) %>%
-      pivot_longer(-date,names_to = "asset_category") %>%
-      separate(col = asset_category,into = c("asset_category","asset_characteristic"),
-               sep = "-")
+      select(-c("deposits", "withdrawals", "accumulated_savings")) %>%
+      pivot_longer(-date, names_to = "asset_category")
 
   }
 
-  if(pivot_to_long & data_type == "total_flows"){
+  if(generic_pivot_to_long & generic_data_type == "total_flows"){
 
     df = df %>%
       select(c("date","deposits","withdrawals","accumulated_savings")) %>%
@@ -914,7 +920,6 @@ import_boi_pension_generic_flows = function(file_path = NULL,
 
 import_boi_pension_generic_balance = function(file_path = NULL,
                                               source_link = NULL,
-                                              generic_data_type,
                                               pivot_to_long = TRUE){
 
   names_vec = c(
@@ -944,7 +949,8 @@ import_boi_pension_generic_balance = function(file_path = NULL,
   }
 
 
-  raw_df = read_xls(file_path,sheet = 1,range = cell_limits(c(8, 1), c(NA, NA)))
+  raw_df = suppressMessages(read_xls(file_path,sheet = 1,
+                                     range = cell_limits(c(8, 1), c(NA, NA))))
 
   empty_cols = c(5,8,11)
 
@@ -958,9 +964,7 @@ import_boi_pension_generic_balance = function(file_path = NULL,
   if(pivot_to_long){
 
     df = df %>%
-      pivot_longer(-date,names_to = "asset_class") %>%
-      separate(col = asset_class,into = c("asset_class","asset_category"),
-               sep = "-")
+      pivot_longer(-date,names_to = "asset_class")
 
   }
 
@@ -970,7 +974,10 @@ import_boi_pension_generic_balance = function(file_path = NULL,
 
 }
 
-#' @title  This function returns institutional investors flows accounting
+#' @title  This function returns institutional investors flows data
+#'
+#' @description The function returns two types of data
+#'
 #'
 #' @import readxl
 #'
@@ -981,6 +988,15 @@ import_boi_pension_generic_balance = function(file_path = NULL,
 #' @import dplyr
 #'
 #' @import lubridate
+#'
+#' @param data_type a string.
+#'
+#' \itemize{
+#'  \item{"assets_composition"}{The default. Returns a time series of
+#'   pension funds net inflows by asset class}
+#'  \item{"total_flows"}{Returns a time series of
+#'   pension funds deposits, withdrawals and accumulated_savings}
+#' }
 #'
 #' @export
 #'
@@ -994,11 +1010,14 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
     ~ category,
     ~ temp_source_link,
     "pensia_vatikot",
-    "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce19_h.xls",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce19_h.xls"),
     "pensia_mekifot_hadashot",
-    "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce21_h.xls",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce21_h.xls"),
     "pensia_claliot_hadashot",
-    "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce23_h.xls"
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce23_h.xls")
   )
 
 
@@ -1022,6 +1041,7 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
         temp_df = import_boi_pension_generic_flows(
           file_path = temp_file_path,
           source_link = temp_source_link,
+          generic_pivot_to_long = pivot_to_long,
           generic_data_type = data_type) %>%
           mutate(investor_type = category)
 
@@ -1038,6 +1058,7 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
 
         temp_df = import_boi_pension_generic_flows(
           temp_file_path,
+          generic_pivot_to_long = pivot_to_long,
           generic_data_type = data_type) %>%
           mutate(investor_type = category)
 
@@ -1078,11 +1099,14 @@ import_boi_pension_funds_balance = function(download_file = FALSE,
     ~ category,
     ~ temp_source_link,
     "pensia_vatikot",
-    "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce16_h.xls",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce16_h.xls"),
     "pensia_mekifot_hadashot",
-    "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce20_h.xls",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce20_h.xls"),
     "pensia_claliot_hadashot",
-    "https://www.boi.org.il/he/DataAndStatistics/Lists/BoiTablesAndGraphs/shce22_h.xls"
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce22_h.xls")
   )
 
 
