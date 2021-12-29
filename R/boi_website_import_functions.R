@@ -84,12 +84,6 @@ import_boi_corporate_bonds_holdings = function(file_path = NULL,
 
 }
 
-
-
-
-
-
-
 #' @title Import institutional investor portfolio by asset class
 #'
 #' @description This function imports institutional investor
@@ -137,7 +131,7 @@ import_boi_institutional_portolio_asset_class = function(file_path = NULL,
       "pensia_claliot_hadashot",
       "pensia_mekifot_hadashot",
       "nemanut",
-      "bituah_mishtatfot_bereavihim",
+      "bituah_mishtatfot_berevahim",
       "bituah_mavtihot_tsua",
       "total"
     )
@@ -278,7 +272,7 @@ import_boi_institutional_foreign_assets_exposure = function(file_path = NULL,
     "gemel_hishtalmut",
     "pensia_hadashot",
     "pensia_vatikot",
-    "bituah_mishtatfot_bereavihim",
+    "bituah_mishtatfot_berevahim",
     "bituah_mavtihot_tsua"
   )
 
@@ -429,7 +423,7 @@ import_boi_institutional_FX_exposure = function(file_path = NULL,
     "gemel_hishtalmut",
     "pensia_hadashot",
     "pensia_vatikot",
-    "bituah_mishtatfot_bereavihim",
+    "bituah_mishtatfot_berevahim",
     "bituah_mavtihot_tsua"
   )
 
@@ -755,7 +749,7 @@ import_boi_public_assets_by_institution_type = function(file_path = NULL,
     "pensia_vatikot-institutional_holdings",
     "pensia_hadashot-institutional_holdings",
     "bituah_mavtihot_tsua-institutional_holdings",
-    "bituah_mishtatfot_bereavihim-institutional_holdings",
+    "bituah_mishtatfot_berevahim-institutional_holdings",
     "nemanut-institutional_holdings",
     "cash_and_deposits-direct_holdings",
     "gov_bond_traded-direct_holdings",
@@ -903,8 +897,7 @@ import_boi_pension_generic_flows = function(file_path = NULL,
 }
 
 
-#' @title  This is an auxiliary function that returns generic institutional
-#' investors flows accounting
+#' @title  This is an auxiliary function that returns generic pension balance
 #'
 #' @import readxl
 #'
@@ -974,7 +967,79 @@ import_boi_pension_generic_balance = function(file_path = NULL,
 
 }
 
-#' @title  This function returns institutional investors flows data
+
+#' @title  This is an auxiliary function that returns generic pension balance
+#'
+#' @import readxl
+#'
+#' @import stringr
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#'
+
+import_boi_insurance_generic_balance = function(file_path = NULL,
+                                              source_link = NULL,
+                                              pivot_to_long = TRUE){
+
+  names_vec = c(
+    "date",
+    "total_assets",
+    "gov_bond-traded",
+    "gov_bond-earmarked",
+    "corp_bond-traded",
+    "corp_bond-not_traded",
+    "makam",
+    "stocks",
+    "stocks-etf",
+    "bond-etf",
+    "mutual_fund_shares",
+    "cash_and_deposits",
+    "loans",
+    "real_estate",
+    "foreign",
+    "other_payments"
+  )
+
+
+  if(!is.null(source_link)){
+
+    download.file(url = source_link,destfile = file_path,mode = "wb")
+
+
+  }
+
+
+  raw_df = suppressMessages(read_xls(file_path,sheet = 1,
+                                     range = cell_limits(c(8, 1), c(NA, NA))))
+
+  empty_cols = c(5,8,14)
+
+  df = raw_df %>%
+    select(-empty_cols) %>%
+    set_names(names_vec) %>%
+    mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
+    filter(!is.na(date)) %>%
+    mutate(across(-c(date, `total_assets`), ~ . * `total_assets` / 100))
+
+  if(pivot_to_long){
+
+    df = df %>%
+      pivot_longer(-date,names_to = "asset_class")
+
+  }
+
+
+
+  return(df)
+
+}
+
+#' @title  This function returns pension funds flows data
 #'
 #' @description The function returns two types of data
 #'
@@ -1155,6 +1220,161 @@ import_boi_pension_funds_balance = function(download_file = FALSE,
   return(df)
 
 }
+
+
+import_boi_pension_funds_flows = function(download_file = FALSE,
+                                          data_type = "assets_composition",
+                                          pivot_to_long = TRUE){
+
+  files_table = tribble(
+    ~ category,
+    ~ temp_source_link,
+    "pensia_vatikot",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce19_h.xls"),
+    "pensia_mekifot_hadashot",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce21_h.xls"),
+    "pensia_claliot_hadashot",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce23_h.xls")
+  )
+
+
+
+
+  files_table = files_table %>%
+    mutate(temp_file_path = map_chr(temp_source_link,
+                                    ~str_extract(.,pattern = "shce.*$"))) %>%
+    mutate(temp_file_path = paste0(Sys.getenv("USERPROFILE"),
+                                   "\\OneDrive - Bank Of Israel\\Data",
+                                   "\\BoI\\institutional_investors\\",
+                                   temp_file_path))
+
+
+  if(download_file){
+
+
+    df =  files_table %>%
+      pmap_dfr(function(category,temp_source_link,temp_file_path){
+
+        temp_df = import_boi_pension_generic_flows(
+          file_path = temp_file_path,
+          source_link = temp_source_link,
+          generic_pivot_to_long = pivot_to_long,
+          generic_data_type = data_type) %>%
+          mutate(investor_type = category)
+
+
+      })
+
+
+  }
+  else {
+
+
+    df =  files_table %>%
+      pmap_dfr(function(category,temp_source_link,temp_file_path){
+
+        temp_df = import_boi_pension_generic_flows(
+          temp_file_path,
+          generic_pivot_to_long = pivot_to_long,
+          generic_data_type = data_type) %>%
+          mutate(investor_type = category)
+
+
+      })
+
+  }
+
+
+  return(df)
+
+
+
+}
+
+
+#' @title  This function returns institutional investors balance accounting
+#'
+#' @import readxl
+#'
+#' @import purrr
+#'
+#' @import stringr
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#' @export
+#'
+
+import_boi_insurance_balance = function(download_file = FALSE,
+                                            pivot_to_long = TRUE){
+
+  files_table = tribble(
+    ~ category,
+    ~ temp_source_link,
+    "bituah_mavtihot_tsua",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce24_h.xls"),
+    "bituah_mishtatfot_berevahim",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce25_h.xls")
+  )
+
+
+
+
+  files_table = files_table %>%
+    mutate(temp_file_path = map_chr(temp_source_link,
+                                    ~str_extract(.,pattern = "shce.*$"))) %>%
+    mutate(temp_file_path = paste0(Sys.getenv("USERPROFILE"),
+                                   "\\OneDrive - Bank Of Israel\\Data",
+                                   "\\BoI\\institutional_investors\\insurance\\",
+                                   temp_file_path))
+
+
+  if(download_file){
+
+
+    df =  files_table %>%
+      pmap_dfr(function(category,temp_source_link,temp_file_path){
+
+        temp_df = import_boi_insurance_generic_balance(
+          file_path = temp_file_path,
+          source_link = temp_source_link) %>%
+          mutate(investor_type = category)
+
+
+      })
+
+
+  }
+  else {
+
+
+    df =  files_table %>%
+      pmap_dfr(function(category,temp_source_link,temp_file_path){
+
+        temp_df = import_boi_insurance_generic_balance(temp_file_path) %>%
+          mutate(investor_type = category)
+
+
+      })
+
+  }
+
+
+  return(df)
+
+}
+
+
+
 
 # This function returns data format
 

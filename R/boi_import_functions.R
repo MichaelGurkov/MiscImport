@@ -47,7 +47,7 @@ import_boi_institutional_portolio_asset_class = function(file_path = NULL,
       "pensia_claliot_hadashot",
       "pensia_mekifot_hadashot",
       "nemanut",
-      "bituah_mishtatfot_bereavihim",
+      "bituah_mishtatfot_berevahim",
       "bituah_mavtihot_tsua",
       "total"
     )
@@ -187,7 +187,7 @@ import_boi_institutional_foreign_assets_exposure = function(file_path = NULL,
     "gemel_hishtalmut",
     "pensia_hadashot",
     "pensia_vatikot",
-    "bituah_mishtatfot_bereavihim",
+    "bituah_mishtatfot_berevahim",
     "bituah_mavtihot_tsua"
   )
 
@@ -338,7 +338,7 @@ import_boi_institutional_FX_exposure = function(file_path = NULL,
     "gemel_hishtalmut",
     "pensia_hadashot",
     "pensia_vatikot",
-    "bituah_mishtatfot_bereavihim",
+    "bituah_mishtatfot_berevahim",
     "bituah_mavtihot_tsua"
   )
 
@@ -671,7 +671,7 @@ import_boi_public_assets_by_institution_type = function(file_path = NULL,
     "pensia_vatikot-institutional_holdings",
     "pensia_hadashot-institutional_holdings",
     "bituah_mavtihot_tsua-institutional_holdings",
-    "bituah_mishtatfot_bereavihim-institutional_holdings",
+    "bituah_mishtatfot_berevahim-institutional_holdings",
     "nemanut-institutional_holdings",
     "cash_and_deposits-direct_holdings",
     "gov_bond_traded-direct_holdings",
