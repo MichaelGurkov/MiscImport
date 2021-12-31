@@ -957,7 +957,8 @@ import_boi_pension_generic_balance = function(file_path = NULL,
   if(pivot_to_long){
 
     df = df %>%
-      pivot_longer(-date,names_to = "asset_class")
+      pivot_longer(-date,names_to = "asset_class") %>%
+      filter(!asset_class == "total_assets")
 
   }
 
