@@ -131,8 +131,8 @@ import_boi_institutional_portolio_asset_class = function(file_path = NULL,
       "pensia_claliot_hadashot",
       "pensia_mekifot_hadashot",
       "nemanut",
-      "bituah_mishtatfot_berevahim",
       "bituah_mavtihot_tsua",
+      "bituah_mishtatfot_berevahim",
       "total"
     )
 
