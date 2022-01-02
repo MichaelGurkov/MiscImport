@@ -110,11 +110,11 @@ import_boi_institutional_portolio_asset_class = function(file_path = NULL,
     col_names_vec = c(
       "total_assets",
       "gov_bond-traded",
-      "gov_bond-non_traded",
+      "gov_bond-not_traded",
       "corp_bond-traded",
-      "corp_bond-non_traded",
+      "corp_bond-not_traded",
       "stocks-traded",
-      "stocks-non_traded",
+      "stocks-not_traded",
       "stocks-etf",
       "bond-etf",
       "foreign",
@@ -844,9 +844,9 @@ import_boi_pension_generic_flows = function(file_path = NULL,
     "gov_bond-traded",
     "gov_bond-earmarked",
     "corp_bond-traded",
-    "corp_bond-non_traded",
+    "corp_bond-not_traded",
     "stocks-traded",
-    "stocks-non_traded",
+    "stocks-not_traded",
     "stocks-etf",
     "bond-etf",
     "foreign",
@@ -879,7 +879,7 @@ import_boi_pension_generic_flows = function(file_path = NULL,
 
     df = df %>%
       select(-c("deposits", "withdrawals", "accumulated_savings")) %>%
-      pivot_longer(-date, names_to = "asset_category")
+      pivot_longer(-date, names_to = "asset_class")
 
   }
 
@@ -1390,13 +1390,13 @@ return_datafile_format = function(data_freq = "month",
     "5","institutional","business_sector","all_instruments","na",
     "6","institutional","business_sector","loans","na",
     "7","institutional","business_sector","traded_bonds","na",
-    "8","institutional","business_sector","non_traded_bonds","na",
+    "8","institutional","business_sector","not_traded_bonds","na",
     "9","credit_card","business_sector","all_instruments","na",
     "10","credit_card","business_sector","loans","na",
     "12","foreign","business_sector","all_instruments","na",
     "13","foreign","business_sector","loans","na",
     "14","foreign","business_sector","traded_bonds","na",
-    "15","foreign","business_sector","non_traded_bonds","na",
+    "15","foreign","business_sector","not_traded_bonds","na",
     "17","gov_sector","business_sector","all_instruments","na",
     "18","gov_sector","business_sector","allocated_credit","na",
     "19","households","business_sector","all_instruments","na",
@@ -1417,7 +1417,7 @@ return_datafile_format = function(data_freq = "month",
     "58","institutional","gov_sector","all_instruments","na",
     "59","institutional","gov_sector","loans","na",
     "60","institutional","gov_sector","traded_bonds","na",
-    "61","institutional","gov_sector","non_traded_bonds","na"
+    "61","institutional","gov_sector","not_traded_bonds","na"
   ) %>%
     mutate(across(everything(), ~na_if(.,"na"))) %>%
     mutate(row_num = as.numeric(row_num))
