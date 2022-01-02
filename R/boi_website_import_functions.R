@@ -879,7 +879,7 @@ import_boi_pension_generic_flows = function(file_path = NULL,
 
     df = df %>%
       select(-c("deposits", "withdrawals", "accumulated_savings")) %>%
-      pivot_longer(-date, names_to = "asset_category")
+      pivot_longer(-date, names_to = "asset_class")
 
   }
 
