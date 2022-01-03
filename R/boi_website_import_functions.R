@@ -472,8 +472,8 @@ import_boi_institutional_FX_exposure = function(file_path = NULL,
 #' @export
 #'
 import_boi_credit_df = function(file_path = NULL,
-                                data_frequency = "quarter",
-                                download_file = FALSE){
+                                download_file = FALSE,
+                                data_frequency = "quarter"){
 
   file_name = "itrashrh.xlsx"
 
@@ -554,6 +554,7 @@ import_boi_credit_df = function(file_path = NULL,
 #' @export
 #'
 import_boi_debt_df = function(file_path = NULL,
+                              download_file = FALSE,
                               data_frequency = "month"){
 
   file_name = "itrchovh.xlsx"
