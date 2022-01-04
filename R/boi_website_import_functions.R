@@ -809,7 +809,7 @@ import_boi_public_assets_by_institution_type = function(file_path = NULL,
 }
 
 
-#' @title  This is an auxiliary function that returns generic pension funds flows
+#' @title  This is an auxiliary function that returns generic flows
 #' accounting
 #'
 #' @import readxl
@@ -825,8 +825,9 @@ import_boi_public_assets_by_institution_type = function(file_path = NULL,
 #' @import lubridate
 #'
 
-import_boi_pension_generic_flows = function(file_path = NULL,
+import_boi_generic_flows = function(file_path = NULL,
                                             source_link = NULL,
+                                            start_row = 8,
                                             generic_pivot_to_long,
                                             generic_data_type){
 
@@ -865,7 +866,8 @@ import_boi_pension_generic_flows = function(file_path = NULL,
 
 
   raw_df = suppressMessages(read_xls(file_path,sheet = 1,
-                                     range = cell_limits(c(8, 1), c(NA, NA))))
+                                     range = cell_limits(c(start_row, 1),
+                                                         c(NA, NA))))
 
   empty_cols = c(5,8,11,14)
 
@@ -1040,7 +1042,7 @@ import_boi_insurance_generic_balance = function(file_path = NULL,
 
 }
 
-#' @title  This function returns pension funds flows data
+#' @title  This function returns institutional funds flows data
 #'
 #' @description The function returns two types of data
 #'
@@ -1068,22 +1070,35 @@ import_boi_insurance_generic_balance = function(file_path = NULL,
 #'
 
 
-import_boi_pension_funds_flows = function(download_file = FALSE,
+import_boi_institutional_funds_flows = function(download_file = FALSE,
                                           data_type = "assets_composition",
                                           pivot_to_long = TRUE){
 
   files_table = tribble(
     ~ category,
     ~ temp_source_link,
+    ~ temp_start_row,
     "pensia_vatikot",
     paste0("https://www.boi.org.il/he/DataAndStatistics",
            "/Lists/BoiTablesAndGraphs/shce19_h.xls"),
+    8,
     "pensia_mekifot_hadashot",
     paste0("https://www.boi.org.il/he/DataAndStatistics",
            "/Lists/BoiTablesAndGraphs/shce21_h.xls"),
+    8,
     "pensia_claliot_hadashot",
     paste0("https://www.boi.org.il/he/DataAndStatistics",
-           "/Lists/BoiTablesAndGraphs/shce23_h.xls")
+           "/Lists/BoiTablesAndGraphs/shce23_h.xls"),
+    8,
+    "gemel",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce17_h.xls"),
+    9,
+    "hishtalmut",
+    paste0("https://www.boi.org.il/he/DataAndStatistics",
+           "/Lists/BoiTablesAndGraphs/shce18_h.xls"),
+    8
+
   )
 
 
@@ -1102,11 +1117,13 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
 
 
     df =  files_table %>%
-      pmap_dfr(function(category,temp_source_link,temp_file_path){
+      pmap_dfr(function(category,temp_source_link,temp_file_path,
+                        temp_start_row){
 
-        temp_df = import_boi_pension_generic_flows(
+        temp_df = import_boi_generic_flows(
           file_path = temp_file_path,
           source_link = temp_source_link,
+          start_row = temp_start_row,
           generic_pivot_to_long = pivot_to_long,
           generic_data_type = data_type) %>%
           mutate(investor_type = category)
@@ -1120,10 +1137,12 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
 
 
     df =  files_table %>%
-      pmap_dfr(function(category,temp_source_link,temp_file_path){
+      pmap_dfr(function(category,temp_source_link,temp_file_path,
+                        temp_start_row){
 
-        temp_df = import_boi_pension_generic_flows(
-          temp_file_path,
+        temp_df = import_boi_generic_flows(
+          file_path = temp_file_path,
+          start_row = temp_start_row,
           generic_pivot_to_long = pivot_to_long,
           generic_data_type = data_type) %>%
           mutate(investor_type = category)
@@ -1139,6 +1158,10 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
 
 
 }
+
+
+
+
 
 
 #' @title  This function returns institutional investors balance accounting
@@ -1259,7 +1282,7 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
     df =  files_table %>%
       pmap_dfr(function(category,temp_source_link,temp_file_path){
 
-        temp_df = import_boi_pension_generic_flows(
+        temp_df = import_boi_generic_flows(
           file_path = temp_file_path,
           source_link = temp_source_link,
           generic_pivot_to_long = pivot_to_long,
@@ -1277,7 +1300,7 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
     df =  files_table %>%
       pmap_dfr(function(category,temp_source_link,temp_file_path){
 
-        temp_df = import_boi_pension_generic_flows(
+        temp_df = import_boi_generic_flows(
           temp_file_path,
           generic_pivot_to_long = pivot_to_long,
           generic_data_type = data_type) %>%
