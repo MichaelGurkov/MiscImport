@@ -660,6 +660,18 @@ import_boi_debt_by_sectors_df = function(file_path = NULL,
 
 }
 
+#' @title  This function returns public assets data categorized by asset class
+#'
+#' @import readxl
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#' @export
+
 
 import_boi_public_assets_by_asset_class = function(file_path = NULL,
                                                    download_file = FALSE,
@@ -681,32 +693,25 @@ import_boi_public_assets_by_asset_class = function(file_path = NULL,
     "other_foreign"
   )
 
+
+  file_name = "tnc04_h.xls"
+
   if(is.null(file_path)){
 
     file_path = paste0(Sys.getenv("USERPROFILE"),
                        "\\OneDrive - Bank Of Israel\\Data",
-                       "\\BoI\\public_assets\\tnc04_h.xls")
+                       "\\BoI\\public_assets\\", file_name)
 
 
   }
-
 
   if(download_file){
 
     source_link = paste0("https://www.boi.org.il/he/",
-                         "DataAndStatistics/Lists/BoiTablesAndGraphs/tnc04_h.xls")
+                         "DataAndStatistics/Lists/BoiTablesAndGraphs/",
+                         file_name)
 
     download.file(url = source_link,destfile = file_path,mode = "wb")
-
-
-  }
-
-
-  if(is.null(file_path)){
-
-    file_path = paste0(Sys.getenv("USERPROFILE"),
-                       "\\OneDrive - Bank Of Israel\\Data",
-                       "\\BoI\\public_assets\\tnc04_h.xls")
 
 
   }
@@ -721,12 +726,21 @@ import_boi_public_assets_by_asset_class = function(file_path = NULL,
     mutate(across(-c(date, total_assets), ~ . * total_assets / 100))
 
 
+  if(pivot_to_long){
+
+    df = df  %>%
+      select(-total_assets) %>%
+      pivot_longer(-date,names_to = "asset_class")
+
+  }
+
+
   return(df)
 
 }
 
 
-#' @title  This function returns public assets data categorized by investment vehicle
+#' @title  This function returns public assets data categorized by institution type
 #'
 #' @import readxl
 #'
@@ -798,6 +812,7 @@ import_boi_public_assets_by_institution_type = function(file_path = NULL,
   if(pivot_to_long){
 
     df = df %>%
+      select(-`total_assets-total`) %>%
       pivot_longer(-date,names_to = "asset_class") %>%
       separate(col = asset_class,into = c("asset_class","investment_vehicle"),
                sep = "-")
