@@ -1048,6 +1048,7 @@ import_boi_insurance_generic_balance = function(file_path = NULL,
   if(pivot_to_long){
 
     df = df %>%
+      select(-`total_assets`) %>%
       pivot_longer(-date,names_to = "asset_class")
 
   }
