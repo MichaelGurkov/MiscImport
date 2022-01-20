@@ -479,7 +479,7 @@ import_boi_credit_df = function(file_path = NULL,
 
   source_link = paste0(
     "https://www.boi.org.il/he/DataAndStatistics",
-    "/Lists/BoiTablesAndGraphs/", file_path)
+    "/Lists/BoiTablesAndGraphs/", file_name)
 
   if(is.null(file_path)){
 
