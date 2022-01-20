@@ -1178,9 +1178,7 @@ import_boi_institutional_funds_flows = function(download_file = FALSE,
 
 
 
-
-
-#' @title  This function returns institutional investors balance accounting
+#' @title  This function returns pension funds balance accounting
 #'
 #' @import readxl
 #'
@@ -1262,6 +1260,25 @@ import_boi_pension_funds_balance = function(download_file = FALSE,
 }
 
 
+#' @title  This function returns pension funds flows
+#'
+#' @import readxl
+#'
+#' @import purrr
+#'
+#' @import stringr
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#' @export
+#'
+
+
+
 import_boi_pension_funds_flows = function(download_file = FALSE,
                                           data_type = "assets_composition",
                                           pivot_to_long = TRUE){
@@ -1335,7 +1352,7 @@ import_boi_pension_funds_flows = function(download_file = FALSE,
 }
 
 
-#' @title  This function returns institutional investors balance accounting
+#' @title  This function returns insurance balance accounting
 #'
 #' @import readxl
 #'
