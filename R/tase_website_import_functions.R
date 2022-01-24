@@ -10,7 +10,9 @@
 #'
 #' @import lubridate
 #'
-tase_import_market_cap = function(file_path = NULL,
+#' @export
+#'
+import_tase_market_cap = function(file_path = NULL,
                                   download_file = FALSE,
                                   pivot_to_long = TRUE){
 
