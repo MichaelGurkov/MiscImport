@@ -1,6 +1,80 @@
 utils::globalVariables("where")
 
 
+#' This function imports issuance data from cognus
+#'
+#' @import readxl
+#'
+#' @import dplyr
+#'
+#' @import tidyr
+#'
+#' @importFrom magrittr set_names
+#'
+#' @importFrom zoo as.yearmon
+#'
+#' @param sec_type string that specifies the type of securites (stock or bond)
+#'
+#' @export
+#'
+import_boi_cognus_issuance_data = function(file_path = NULL,
+                                           sec_type = "stock"){
+
+  if(is.null(file_path)){
+
+    file_path = paste0(Sys.getenv("USERPROFILE"),
+                       "\\OneDrive - Bank Of Israel\\Data",
+                       "\\BoI\\securities_issuance\\cognus_issuance_data.xlsx")
+
+  }
+
+
+  if(sec_type == "stock"){
+
+   stocks_names = c("month","year","tase_num","issue_israel",
+                    "issue_foreign")
+
+
+   stocks_data = read_xlsx(file_path, sheet = 2)
+
+   stocks_data_clean = stocks_data %>%
+      select(c(1,2,4,12,13)) %>%
+      set_names(stocks_names) %>%
+      unite(date, c("month","year"), sep = "-") %>%
+      mutate(date = as.yearmon(date, format = "%m-%Y"))
+
+
+  return(stocks_data_clean)
+
+
+
+
+  }
+
+
+  if(sec_type == "bond"){
+
+    bonds_names = c("month","year","tase_num","issue_israel",
+                    "issue_foreign", "sec_num")
+
+
+    bonds_data = read_xlsx(file_path, sheet = 1)
+
+    bonds_data_clean = bonds_data %>%
+      select(c(1:3,16:18)) %>%
+      set_names(bonds_names) %>%
+      unite(date, c("month","year"), sep = "-") %>%
+      mutate(date = as.yearmon(date, format = "%m-%Y"))
+
+    return(bonds_data_clean)
+
+
+
+  }
+
+
+}
+
 
 #' @title Import Oracle format financial report data
 #'
