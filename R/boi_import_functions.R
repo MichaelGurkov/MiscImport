@@ -1,6 +1,58 @@
 utils::globalVariables("where")
 
 
+#' @title Import Cognus (DWH) format issuance data
+#'
+#' @description This function imports data by issuu from Cognus (DWH) format
+#'
+#' @importFrom  readxl read_xlsx
+#'
+#' @import dplyr
+#'
+#' @import tidyr
+#'
+#' @importFrom  zoo as.yearmon
+#'
+#' @export
+
+import_boi_cognus_issuance_data = function(file_path = NULL){
+
+  if(is.null(file_path)){
+
+    file_path = paste0(Sys.getenv("USERPROFILE"),
+                       "\\OneDrive - Bank Of Israel\\Data",
+                       "\\BoI\\securities_issuance",
+                       "\\cognus_issuance_data.xlsx")
+
+  }
+
+
+  bonds_issue = read_xlsx(file_path, sheet = 1) %>%
+    select(c(1,2,3,16)) %>%
+    set_names(c("month","year","sec_num","value")) %>%
+    mutate(asset_class = "corp_bond") %>%
+    mutate(value = as.numeric(value)) %>%
+    mutate(across(-value, as.character)) %>%
+    unite("date",c(month,year), sep = "-") %>%
+    mutate(date = as.yearmon(date, format = "%m-%Y"))
+
+  stocks_issue = read_xlsx(file_path, sheet = 2) %>%
+    select(c(1,2,4,12)) %>%
+    set_names(c("month","year","sec_num","value")) %>%
+    mutate(asset_class = "stock") %>%
+    mutate(value = as.numeric(value)) %>%
+    mutate(across(-value, as.character)) %>%
+    unite("date",c(month,year), sep = "-") %>%
+    mutate(date = as.yearmon(date, format = "%m-%Y"))
+
+  issuance_df = bonds_issue %>%
+    bind_rows(stocks_issue)
+
+  return(issuance_df)
+
+
+}
+
 
 #' @title Import Oracle format financial report data
 #'
