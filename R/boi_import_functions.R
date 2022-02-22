@@ -1,55 +1,75 @@
 utils::globalVariables("where")
 
 
-#' @title Import Cognus (DWH) format issuance data
+#' This function imports issuance data from cognus
 #'
-#' @description This function imports data by issuu from Cognus (DWH) format
-#'
-#' @importFrom  readxl read_xlsx
+#' @import readxl
 #'
 #' @import dplyr
 #'
 #' @import tidyr
 #'
-#' @importFrom  zoo as.yearmon
+#' @importFrom magrittr set_names
+#'
+#' @importFrom zoo as.yearmon
+#'
+#' @param sec_type string that specifies the type of securites (stock or bond)
 #'
 #' @export
-
-import_boi_cognus_issuance_data = function(file_path = NULL){
+#'
+import_boi_cognus_issuance_data = function(file_path = NULL,
+                                           sec_type = "stock"){
 
   if(is.null(file_path)){
 
     file_path = paste0(Sys.getenv("USERPROFILE"),
                        "\\OneDrive - Bank Of Israel\\Data",
-                       "\\BoI\\securities_issuance",
-                       "\\cognus_issuance_data.xlsx")
+                       "\\BoI\\securities_issuance\\cognus_issuance_data.xlsx")
+
+  }
+
+  if(sec_type == "stock"){
+
+   stocks_names = c("month","year","tase_num","issue_israel",
+                    "issue_foreign")
+
+
+   stocks_data = read_xlsx(file_path, sheet = 2)
+
+   stocks_data_clean = stocks_data %>%
+      select(c(1,2,4,12,13)) %>%
+      set_names(stocks_names) %>%
+      unite(date, c("month","year"), sep = "-") %>%
+      mutate(date = as.yearmon(date, format = "%m-%Y"))
+
+
+  return(stocks_data_clean)
+
+
+
 
   }
 
 
-  bonds_issue = read_xlsx(file_path, sheet = 1) %>%
-    select(c(1,2,3,16)) %>%
-    set_names(c("month","year","sec_num","value")) %>%
-    mutate(asset_class = "corp_bond") %>%
-    mutate(value = as.numeric(value)) %>%
-    mutate(across(-value, as.character)) %>%
-    unite("date",c(month,year), sep = "-") %>%
-    mutate(date = as.yearmon(date, format = "%m-%Y"))
+  if(sec_type == "bond"){
 
-  stocks_issue = read_xlsx(file_path, sheet = 2) %>%
-    select(c(1,2,4,12)) %>%
-    set_names(c("month","year","sec_num","value")) %>%
-    mutate(asset_class = "stock") %>%
-    mutate(value = as.numeric(value)) %>%
-    mutate(across(-value, as.character)) %>%
-    unite("date",c(month,year), sep = "-") %>%
-    mutate(date = as.yearmon(date, format = "%m-%Y"))
+    bonds_names = c("month","year","tase_num","issue_israel",
+                    "issue_foreign", "sec_num")
 
-  issuance_df = bonds_issue %>%
-    bind_rows(stocks_issue)
 
-  return(issuance_df)
+    bonds_data = read_xlsx(file_path, sheet = 1)
 
+    bonds_data_clean = bonds_data %>%
+      select(c(1:3,16:18)) %>%
+      set_names(bonds_names) %>%
+      unite(date, c("month","year"), sep = "-") %>%
+      mutate(date = as.yearmon(date, format = "%m-%Y"))
+
+    return(bonds_data_clean)
+
+
+
+  }
 
 }
 
