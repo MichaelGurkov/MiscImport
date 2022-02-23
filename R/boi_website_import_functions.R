@@ -1077,9 +1077,9 @@ import_boi_insurance_generic_balance = function(file_path = NULL,
 #' @param data_type a string.
 #'
 #' \itemize{
-#'  \item{"assets_composition"}{The default. Returns a time series of
+#'  \item{assets_composition (default) }{Returns a time series of
 #'   pension funds net inflows by asset class}
-#'  \item{"total_flows"}{Returns a time series of
+#'  \item{total_flows }{Returns a time series of
 #'   pension funds deposits, withdrawals and accumulated_savings}
 #' }
 #'
