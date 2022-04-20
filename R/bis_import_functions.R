@@ -202,7 +202,7 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 #'
 #' @export
 #'
-import_bis_total_credit = function(file_path,
+import_bis_total_credit = function(file_path = NULL,
                                    my_frequency = NULL,
                                    my_borrowing_sector = NULL,
                                    my_lending_sector = NULL,
@@ -1017,6 +1017,182 @@ import_bis_cpi_index = function(file_path,
       pivot_longer(matches("^[0-9]"),
                    names_to = "date",
                    values_to = "cpi"
+      )
+
+
+
+  }
+
+
+  return(filtered_df)
+
+}
+
+
+#' This function imports global liquidity indicators from BIS format
+#'
+#'
+#' @importFrom  readr read_csv cols
+#'
+#' @importFrom zoo as.yearqtr
+#'
+#' @importFrom stats complete.cases
+#'
+#' @importFrom rlang .data
+#'
+#' @importFrom  tidyr pivot_longer
+#'
+#' @importFrom stringr str_replace_all str_remove_all
+#'
+#' @import magrittr
+#'
+#' @import dplyr
+#'
+#' @param file_path string a file path to the source data file
+#'
+#' @param my_frequency time frequency of the data (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Quarterly
+#' }
+#'
+#' @param my_currency_of_denomination currency denomination
+#'  (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Euro
+#'  \item Yen
+#'  \item All currencies
+#'  \item US dollar
+#' }
+#'
+#' @param my_country  borrowers country (default is NULL),
+
+#'
+#' @param my_borrowing_sector (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All sectors
+#'  \item Banks, total
+#'  \item General government
+#'  \item Non-banks, total
+#'  \item Non-financial sectors
+#'  \item Non-financial private sector
+#' }
+#'
+#' @param my_lending_sector (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All sectors
+#'  \item Banks, total
+#' }
+#'
+#' @param my_position_type (default is NULL), toggles the
+#' difference between cross border and local position.
+#'  available options are:
+#' \itemize{
+#'  \item All
+#'  \item Cross-border & Local in FCY
+#'  \item Cross-border
+#'  \item Local
+#' }
+#'
+#' @param my_type_of_instruments (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item All instruments
+#'  \item Credit (loans & debt securities)
+#'  \item Debt securities
+#'  \item Loans and deposits
+#' }
+#'
+#'
+#' @param my_unit_of_measure (default is NULL),
+#' available options are:
+#' \itemize{
+#'  \item Year-on-year changes, in per cent
+#'  \item Euro
+#'  \item Yen
+#'  \item US dollar
+#' }
+#'
+#' @param pivot_to_long reshape the data to long format? Default is FALSE
+#'
+#' @export
+#'
+import_bis_liqiudity_indicators = function(file_path,
+                                my_frequency = NULL,
+                                my_currency_of_denomination = NULL,
+                                my_borrowers_country = NULL,
+                                my_borrowing_sector = NULL,
+                                my_lending_sector = NULL,
+                                my_position_type = NULL,
+                                my_type_of_instruments = NULL,
+                                my_unit_of_measure = NULL,
+                                pivot_to_long = FALSE) {
+
+
+  . = NULL
+
+  filtered_df = read_csv(file_path, col_types = cols()) %>%
+    select(-.data$`Time Period`,-.data$Title,
+           -.data$`Unit Multiplier`, -.data$Decimals,
+           -.data$`Collection Indicator`, -.data$Availability) %>%
+    rename_all( ~ str_replace_all(., " ", "_")) %>%
+    rename_all( ~ str_replace_all(., "_-_", "_")) %>%
+    rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
+    rename_all(~ str_remove_all(., "\\'")) %>%
+    rename_with(tolower, matches("^[A-Za-z]")) %>%
+    rename(country = borrowers_country) %>%
+    mutate(country = str_replace_all(.data$country, "\\s", "_"))
+
+
+  for (filter_name in c(
+    "my_frequency",
+    "my_currency_of_denomination",
+    "my_borrowers_country",
+    "my_borrowing_sector",
+    "my_lending_sector",
+    "my_position_type",
+    "my_type_of_instruments",
+    "my_unit_of_measure"
+
+  )) {
+
+
+    filter_val = get(filter_name)
+
+    if(!is.null(filter_val)){
+
+      filter_name = filter_name %>%
+        str_remove("my_")
+
+      filtered_df = filtered_df %>%
+        filter(!!sym(filter_name) %in% filter_val)
+
+      if(length(filter_val) == 1){
+
+        filtered_df = filtered_df %>%
+          select(-!!sym(filter_name))
+
+      }
+
+
+    }
+
+
+
+
+  }
+
+
+
+  if(pivot_to_long){
+
+    filtered_df = filtered_df %>%
+      pivot_longer(matches("^[0-9]"),
+                   names_to = "date",
+                   values_to = "value"
       )
 
 
