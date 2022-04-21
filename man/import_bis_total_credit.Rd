@@ -5,7 +5,7 @@
 \title{This function imports total credit to private sector from BIS format}
 \usage{
 import_bis_total_credit(
-  file_path,
+  file_path = NULL,
   my_frequency = NULL,
   my_borrowing_sector = NULL,
   my_lending_sector = NULL,

@@ -1069,7 +1069,7 @@ import_bis_cpi_index = function(file_path,
 #' @param my_country  borrowers country (default is NULL),
 
 #'
-#' @param my_borrowing_sector (default is NULL),
+#' @param my_borrowers_sector (default is NULL),
 #' available options are:
 #' \itemize{
 #'  \item All sectors
@@ -1124,7 +1124,7 @@ import_bis_liqiudity_indicators = function(file_path,
                                 my_frequency = NULL,
                                 my_currency_of_denomination = NULL,
                                 my_borrowers_country = NULL,
-                                my_borrowing_sector = NULL,
+                                my_borrowers_sector = NULL,
                                 my_lending_sector = NULL,
                                 my_position_type = NULL,
                                 my_type_of_instruments = NULL,
@@ -1143,15 +1143,16 @@ import_bis_liqiudity_indicators = function(file_path,
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_all(~ str_remove_all(., "\\'")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    rename(country = borrowers_country) %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_"))
+    mutate(borrowers_country = str_replace_all(.data$borrowers_country,
+                                               "\\s", "_")) %>%
+    mutate(across(where(is.character), ~str_remove_all(.,"^[A-Z0-9]+:")))
 
 
   for (filter_name in c(
     "my_frequency",
     "my_currency_of_denomination",
     "my_borrowers_country",
-    "my_borrowing_sector",
+    "my_borrowers_sector",
     "my_lending_sector",
     "my_position_type",
     "my_type_of_instruments",
