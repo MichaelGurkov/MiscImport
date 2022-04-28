@@ -213,6 +213,10 @@ import_bis_total_credit = function(file_path = NULL,
 
   . = NULL
 
+  long_currency_str = paste0("Domestic currency (incl. conversion",
+                             " to current currency made using",
+                             " a fix parity)")
+
   filtered_df = read_csv(file_path, col_types = cols()) %>%
     select(-.data$`Time Period`) %>%
     select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
@@ -221,7 +225,10 @@ import_bis_total_credit = function(file_path = NULL,
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
     rename(country = "borrowers'_country") %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_"))
+    mutate(country = str_replace_all(.data$country, "\\s", "_")) %>%
+    mutate_if(unit_type = str_replace_all(unit_type,
+                                          long_currency_str,
+                                          "Domestic currency"))
 
 
   for (filter_name in c(
@@ -745,7 +752,8 @@ import_bis_selected_property_prices = function(file_path,
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
     rename(country = reference_area) %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_"))
+    mutate(country = str_replace_all(.data$country, "\\s", "_")) %>%
+    mutate(across(where(is.character), ~str_remove_all(.,"^[A-Z0-9]+:")))
 
 
   for (filter_name in c(
