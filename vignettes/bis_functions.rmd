@@ -1,0 +1,5 @@
+
+
+The list of bis source files is:
+
+* Selected property price - "WS_SPP_csv_col.csv"

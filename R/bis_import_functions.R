@@ -213,9 +213,9 @@ import_bis_total_credit = function(file_path = NULL,
 
   . = NULL
 
-  long_currency_str = paste0("Domestic currency (incl. conversion",
+  long_currency_str = paste0("Domestic currency \\(incl\\. conversion",
                              " to current currency made using",
-                             " a fix parity)")
+                             " a fix parity\\)")
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
     select(-.data$`Time Period`) %>%
@@ -226,7 +226,7 @@ import_bis_total_credit = function(file_path = NULL,
     rename_with(tolower, matches("^[A-Za-z]")) %>%
     rename(country = "borrowers'_country") %>%
     mutate(country = str_replace_all(.data$country, "\\s", "_")) %>%
-    mutate_if(unit_type = str_replace_all(unit_type,
+    mutate(unit_type = str_replace_all(unit_type,
                                           long_currency_str,
                                           "Domestic currency"))
 
