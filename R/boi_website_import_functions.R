@@ -1432,64 +1432,99 @@ import_boi_insurance_balance = function(download_file = FALSE,
 }
 
 
+#' This function imports monetary data from BOI website
+#'
+#' @import readxl
+#'
+#' @import tidyr
+#'
+#' @import dplyr
+#'
+#' @import lubridate
+#'
+#' @importFrom purrr pmap_dfr
+#'
+#' @export
+#'
+import_boi_monetary_df = function(file_path = NULL,
+                              download_file = FALSE){
 
+  file_name = "bointcrh.xls"
 
-# This function returns data format
+  source_link = paste0(
+    "https://www.boi.org.il/he/DataAndStatistics/",
+    "Lists/BoiTablesAndGraphs/", file_name)
 
-return_datafile_format = function(data_freq = "month",
-                                  data_type = "debt"){
+  if(is.null(file_path)){
 
-  month_debt_format = tibble::tribble(
-    ~row_num,~lender,~borrower,~instrument,~category,
-    "2","banks","business_sector","all_instruments","na",
-    "3","banks","business_sector","loans","na",
-    "4","banks","business_sector","traded_bonds","na",
-    "5","institutional","business_sector","all_instruments","na",
-    "6","institutional","business_sector","loans","na",
-    "7","institutional","business_sector","traded_bonds","na",
-    "8","institutional","business_sector","not_traded_bonds","na",
-    "9","credit_card","business_sector","all_instruments","na",
-    "10","credit_card","business_sector","loans","na",
-    "12","foreign","business_sector","all_instruments","na",
-    "13","foreign","business_sector","loans","na",
-    "14","foreign","business_sector","traded_bonds","na",
-    "15","foreign","business_sector","not_traded_bonds","na",
-    "17","gov_sector","business_sector","all_instruments","na",
-    "18","gov_sector","business_sector","allocated_credit","na",
-    "19","households","business_sector","all_instruments","na",
-    "20","households","business_sector","traded_bonds","na",
-    "29","banks","households_sector","na","total",
-    "30","banks","households_sector","na","non_residental",
-    "32","banks","households_sector","na","residental",
-    "33","institutional","households_sector","na","total",
-    "34","institutional","households_sector","na","non_residental",
-    "35","institutional","households_sector","na","residental",
-    "36","credit_card","households_sector","na","total",
-    "37","credit_card","households_sector","na","non_residental",
-    "39","foreign","households_sector","na","total",
-    "40","foreign","households_sector","na","non_residental",
-    "55","banks","gov_sector","all_instruments","na",
-    "56","banks","gov_sector","loans","na",
-    "57","banks","gov_sector","traded_bonds","na",
-    "58","institutional","gov_sector","all_instruments","na",
-    "59","institutional","gov_sector","loans","na",
-    "60","institutional","gov_sector","traded_bonds","na",
-    "61","institutional","gov_sector","not_traded_bonds","na"
-  ) %>%
-    mutate(across(everything(), ~na_if(.,"na"))) %>%
-    mutate(row_num = as.numeric(row_num))
+    file_path = paste0(
+      Sys.getenv("USERPROFILE"),
+      "\\OneDrive - Bank Of Israel\\Data\\",
+      "BoI\\monetary_data\\", file_name)
+  }
 
+  if(download_file){
 
-
-  if(data_freq == "month" & data_type == "debt"){
-
-
-    data_file_format = month_debt_format
+    download.file(source_link, file_path,mode = "wb")
 
   }
 
-  return(data_file_format)
 
+  raw_df = read_xls(file_path,sheet = 2,skip = 4,
+                    col_names = c("date_range", "boi_interest_nominal",
+                                  "boi_interest_effective",
+                                  "monetary_loans_interest",
+                                  "monetary_deposits_interest",
+                                  "banking_transactions_interest",
+                                  "end_date","start_date"))
+
+  df = raw_df %>%
+    relocate(start_date,.before = end_date) %>%
+    mutate(across(c("start_date", "end_date"), as.yearmon)) %>%
+    mutate(start_date = if_else(is.na(start_date),
+                                as.yearmon(as.Date(as.numeric(date_range),
+                                                   origin = "1899-12-30")),
+                                start_date)) %>%
+    mutate(end_date = if_else(is.na(end_date), start_date, end_date))
+
+
+
+
+  df_dates_from_range = df %>%
+    filter(!start_date == end_date) %>%
+    pmap_dfr(., function(start_date, end_date,
+                         boi_interest_nominal,
+                         boi_interest_effective,
+                         monetary_loans_interest,
+                         monetary_deposits_interest,
+                         banking_transactions_interest,...){
+
+      temp_df = tibble(date = seq.Date(
+        from = as.Date(paste(year(start_date), month(start_date), "01",
+                             sep = "-")),
+        to = as.Date(paste(year(end_date), month(end_date), "01",
+                           sep = "-")), by = "month")) %>%
+        mutate(date = as.yearmon(date)) %>%
+        mutate(boi_interest_nominal = boi_interest_nominal) %>%
+        mutate(boi_interest_effective = boi_interest_effective) %>%
+        mutate(monetary_loans_interest = monetary_loans_interest) %>%
+        mutate(monetary_deposits_interest = monetary_deposits_interest) %>%
+        mutate(banking_transactions_interest = banking_transactions_interest)
+
+      return(temp_df)
+
+
+    })
+
+  df_dates = df %>%
+    filter(start_date == end_date) %>%
+    mutate(date = start_date) %>%
+    select(all_of(names(df_dates_from_range)))
+
+  df = df_dates %>%
+    bind_rows(df_dates_from_range)
+
+  return(df)
 
 
 }
