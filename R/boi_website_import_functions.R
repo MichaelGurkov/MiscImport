@@ -1478,20 +1478,22 @@ import_boi_monetary_df = function(file_path = NULL,
                                   "banking_transactions_interest",
                                   "end_date","start_date"))
 
+
   df = raw_df %>%
     relocate(start_date,.before = end_date) %>%
-    mutate(across(c("start_date", "end_date"), as.yearmon)) %>%
+    mutate(across(c(start_date, end_date), as.Date)) %>%
     mutate(start_date = if_else(is.na(start_date),
-                                as.yearmon(as.Date(as.numeric(date_range),
-                                                   origin = "1899-12-30")),
-                                start_date)) %>%
-    mutate(end_date = if_else(is.na(end_date), start_date, end_date))
+                                as.Date(as.numeric(date_range),
+                                        origin="1899-12-30"),start_date)) %>%
+    filter(!is.na(start_date)) %>%
+    mutate(end_date = if_else(is.na(end_date),
+                              lag(start_date),end_date)) %>%
+    arrange(start_date)
 
 
 
 
-  df_dates_from_range = df %>%
-    filter(!start_date == end_date) %>%
+  long_df = df %>%
     pmap_dfr(., function(start_date, end_date,
                          boi_interest_nominal,
                          boi_interest_effective,
@@ -1500,11 +1502,8 @@ import_boi_monetary_df = function(file_path = NULL,
                          banking_transactions_interest,...){
 
       temp_df = tibble(date = seq.Date(
-        from = as.Date(paste(year(start_date), month(start_date), "01",
-                             sep = "-")),
-        to = as.Date(paste(year(end_date), month(end_date), "01",
-                           sep = "-")), by = "month")) %>%
-        mutate(date = as.yearmon(date)) %>%
+        from = start_date,
+        to = end_date, by = "day")) %>%
         mutate(boi_interest_nominal = boi_interest_nominal) %>%
         mutate(boi_interest_effective = boi_interest_effective) %>%
         mutate(monetary_loans_interest = monetary_loans_interest) %>%
@@ -1516,15 +1515,8 @@ import_boi_monetary_df = function(file_path = NULL,
 
     })
 
-  df_dates = df %>%
-    filter(start_date == end_date) %>%
-    mutate(date = start_date) %>%
-    select(all_of(names(df_dates_from_range)))
 
-  df = df_dates %>%
-    bind_rows(df_dates_from_range)
-
-  return(df)
+  return(long_df)
 
 
 }
