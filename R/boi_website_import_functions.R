@@ -1470,7 +1470,7 @@ import_boi_monetary_df = function(file_path = NULL,
   }
 
 
-  raw_df = read_xls(file_path,sheet = 2,skip = 4,
+  raw_df = read_xls(file_path,sheet = 2,skip = 3,
                     col_names = c("date_range", "boi_interest_nominal",
                                   "boi_interest_effective",
                                   "monetary_loans_interest",
