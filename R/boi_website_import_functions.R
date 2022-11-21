@@ -66,7 +66,7 @@ import_boi_corporate_bonds_holdings = function(file_path = NULL,
 
   df = raw_df %>%
     select(-all_of(empty_cols)) %>%
-    set_names(col_names) %>%
+    purrr::set_names(col_names) %>%
     filter(complete.cases(.)) %>%
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     mutate(date = as.yearmon(date)) %>%
@@ -149,9 +149,9 @@ import_boi_institutional_portolio_asset_class = function(file_path = NULL,
                                        range = temp_cell_range))
 
     temp_df = raw_df %>%
-      select(-empty_cols) %>%
+      select(-all_of(empty_cols)) %>%
       filter(complete.cases(.)) %>%
-      set_names(col_names_vec) %>%
+      purrr::set_names(col_names_vec) %>%
       mutate(across(-total_assets, ~ . / 100 * total_assets)) %>%
       select(-total_assets)
 
@@ -312,7 +312,7 @@ import_boi_institutional_foreign_assets_exposure = function(file_path = NULL,
       slice(c(1, temp_ind)) %>%
       t() %>%
       as_tibble(.name_repair = "minimal") %>%
-      set_names(c("date", categories))
+      purrr::set_names(c("date", categories))
 
   },
   .id = "investor_type")
@@ -435,7 +435,7 @@ import_boi_institutional_FX_exposure = function(file_path = NULL,
       slice(c(1, temp_ind)) %>%
       t() %>%
       as_tibble(.name_repair = "minimal") %>%
-      set_names(c("date", categories))
+      purrr::set_names(c("date", categories))
 
   },
   .id = "investor_type")
@@ -497,12 +497,6 @@ import_boi_credit_df = function(file_path = NULL,
 
   sheets_names = excel_sheets(file_path)
 
-  data_format_filepath = paste0(
-    file.path(Sys.getenv("USERPROFILE")),
-    "\\Documents\\BoICredit\\analysis\\BOI_data_format.csv")
-
-  data_format = readr::read_csv(data_format_filepath)
-
   if(data_frequency == "quarter"){
 
     quarterly_df = read_xlsx(file_path,sheet = sheets_names[1],
@@ -510,9 +504,9 @@ import_boi_credit_df = function(file_path = NULL,
                                                  lr = c(77,NA_integer_)))
 
     df = quarterly_df %>%
-      slice(data_format$row_num) %>%
+      slice(boi_format_quarterly_data$row_num) %>%
       select(-1) %>%
-      cbind.data.frame(select(data_format, -row_num)) %>%
+      cbind.data.frame(select(boi_format_quarterly_data, -row_num)) %>%
       pivot_longer(-c("lender","borrower","instrument","category"),
                    names_to = "date", values_to = "value") %>%
       mutate(date = zoo::as.yearqtr(date, format = "%m-%y"))
@@ -526,9 +520,9 @@ import_boi_credit_df = function(file_path = NULL,
                                                lr = c(77,NA_integer_)))
 
     df = monthly_df %>%
-      slice(data_format$row_num) %>%
+      slice(boi_format_monthly_data$row_num) %>%
       select(-1) %>%
-      cbind.data.frame(select(data_format, -row_num)) %>%
+      cbind.data.frame(select(boi_format_monthly_data, -row_num)) %>%
       pivot_longer(-c("lender","borrower","instrument","category"),
                    names_to = "date", values_to = "value") %>%
       mutate(date = zoo::as.yearmon(date, format = "%m-%y"))
@@ -581,10 +575,6 @@ import_boi_debt_df = function(file_path = NULL,
   sheets_names = excel_sheets(file_path)
 
 
-  data_format = return_datafile_format(data_freq = "month",
-                                       data_type = "debt")
-
-
   if(data_frequency == "month"){
 
     monthly_df = read_xlsx(file_path,sheet = sheets_names[2],
@@ -592,9 +582,9 @@ import_boi_debt_df = function(file_path = NULL,
                                                lr = c(77,NA_integer_)))
 
     df = monthly_df %>%
-      slice(data_format$row_num) %>%
+      slice(boi_format_monthly_data$row_num) %>%
       select(-1) %>%
-      bind_cols(select(data_format, -row_num)) %>%
+      bind_cols(select(boi_format_monthly_data, -row_num)) %>%
       pivot_longer(-c("lender","borrower","instrument","category"),
                    names_to = "date", values_to = "value") %>%
       mutate(date = zoo::as.yearmon(date, format = "%m-%y"))
@@ -720,7 +710,7 @@ import_boi_public_assets_by_asset_class = function(file_path = NULL,
 
   df = raw_df %>%
     select(-2,-4) %>%
-    set_names(names_vec) %>%
+    purrr::set_names(names_vec) %>%
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     filter(!is.na(date)) %>%
     mutate(across(-c(date, total_assets), ~ . * total_assets / 100))
@@ -803,7 +793,7 @@ import_boi_public_assets_by_institution_type = function(file_path = NULL,
 
   df = raw_df %>%
     select(-2,-4,-12,-13,-14) %>%
-    set_names(names_vec) %>%
+    purrr::set_names(names_vec) %>%
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     filter(!is.na(date)) %>%
     mutate(across(-c(date, `total_assets-total`),
@@ -888,8 +878,8 @@ import_boi_generic_flows = function(file_path = NULL,
   empty_cols = c(5,8,11,14)
 
   df = raw_df %>%
-    select(-empty_cols) %>%
-    set_names(names_vec) %>%
+    select(-all_of(empty_cols)) %>%
+    purrr::set_names(names_vec) %>%
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     filter(!is.na(date))
 
@@ -966,8 +956,8 @@ import_boi_pension_generic_balance = function(file_path = NULL,
   empty_cols = c(5,8,11)
 
   df = raw_df %>%
-    select(-empty_cols) %>%
-    set_names(names_vec) %>%
+    select(-all_of(empty_cols)) %>%
+    purrr::set_names(names_vec) %>%
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     filter(!is.na(date)) %>%
     mutate(across(-c(date, `total_assets`), ~ . * `total_assets` / 100))
@@ -1039,8 +1029,8 @@ import_boi_insurance_generic_balance = function(file_path = NULL,
   empty_cols = c(5,8,14)
 
   df = raw_df %>%
-    select(-empty_cols) %>%
-    set_names(names_vec) %>%
+    select(-all_of(empty_cols)) %>%
+    purrr::set_names(names_vec) %>%
     mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) %>%
     filter(!is.na(date)) %>%
     mutate(across(-c(date, `total_assets`), ~ . * `total_assets` / 100))

@@ -49,7 +49,7 @@ import_tase_market_cap = function(file_path = NULL,
   raw_df = read_xlsx(file_path,range = cell_range)
 
   df = raw_df %>%
-    set_names(col_names) %>%
+    purrr::set_names(col_names) %>%
     mutate(across(everything(), as.numeric)) %>%
     filter(!is.na(year))
 
@@ -130,7 +130,7 @@ import_tase_capital_issuance = function(file_path = NULL,
   raw_df = read_xlsx(file_path,range = cell_range)
 
   df = raw_df %>%
-    set_names(col_names) %>%
+    purrr::set_names(col_names) %>%
     mutate(across(everything(), as.numeric)) %>%
     filter(!is.na(year))
 
