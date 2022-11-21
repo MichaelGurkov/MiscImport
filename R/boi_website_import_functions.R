@@ -504,9 +504,9 @@ import_boi_credit_df = function(file_path = NULL,
                                                  lr = c(77,NA_integer_)))
 
     df = quarterly_df %>%
-      slice(boi_format_quarterly_data$row_num) %>%
+      slice(boi_credit_data_format$row_num) %>%
       select(-1) %>%
-      cbind.data.frame(select(boi_format_quarterly_data, -row_num)) %>%
+      cbind.data.frame(select(boi_credit_data_format, -row_num)) %>%
       pivot_longer(-c("lender","borrower","instrument","category"),
                    names_to = "date", values_to = "value") %>%
       mutate(date = zoo::as.yearqtr(date, format = "%m-%y"))
@@ -520,9 +520,9 @@ import_boi_credit_df = function(file_path = NULL,
                                                lr = c(77,NA_integer_)))
 
     df = monthly_df %>%
-      slice(boi_format_monthly_data$row_num) %>%
+      slice(boi_credit_data_format$row_num) %>%
       select(-1) %>%
-      cbind.data.frame(select(boi_format_monthly_data, -row_num)) %>%
+      cbind.data.frame(select(boi_credit_data_format, -row_num)) %>%
       pivot_longer(-c("lender","borrower","instrument","category"),
                    names_to = "date", values_to = "value") %>%
       mutate(date = zoo::as.yearmon(date, format = "%m-%y"))
@@ -582,9 +582,9 @@ import_boi_debt_df = function(file_path = NULL,
                                                lr = c(77,NA_integer_)))
 
     df = monthly_df %>%
-      slice(boi_format_monthly_data$row_num) %>%
+      slice(boi_debt_data_format$row_num) %>%
       select(-1) %>%
-      bind_cols(select(boi_format_monthly_data, -row_num)) %>%
+      bind_cols(select(boi_debt_data_format, -row_num)) %>%
       pivot_longer(-c("lender","borrower","instrument","category"),
                    names_to = "date", values_to = "value") %>%
       mutate(date = zoo::as.yearmon(date, format = "%m-%y"))
