@@ -25,16 +25,13 @@ import_bis_policy_rates = function(file_path){
   . = NULL
 
   filtered_df = read_csv(file_path,col_types = cols()) %>%
-    select(-.data$`Time Period`) %>%
-    select(-.data$`Frequency`) %>%
-    select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
+    select(matches("[0-9]+"), `Reference area`) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
-    rename_all( ~ str_replace_all(., "_-_", "_")) %>%
-    rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
     rename(country = "reference_area") %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_")) %>%
+    mutate(country = str_replace_all(country, "\\s", "_")) %>%
     pivot_longer(-country,names_to = "date",values_to = "policy_rate") %>%
+    filter(complete.cases(.)) %>%
     mutate(date = as.yearmon(date))
 
   return(filtered_df)
@@ -92,37 +89,37 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 
   named_df = raw_df %>%
     select(
-      -.data$FREQ,
-      -.data$TC_BORROWERS,
-      -.data$TC_LENDERS,
-      -.data$`Time Period`,
-      -.data$CG_DTYPE
+      -FREQ,
+      -TC_BORROWERS,
+      -TC_LENDERS,
+      -`Time Period`,
+      -CG_DTYPE
     ) %>%
     rename_all(~ str_replace_all(., " ", "_")) %>%
     rename_all(~ str_remove_all(., "'")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    rename(country = .data$borrowers_country) %>%
-    rename(country_code = .data$borrowers_cty)
+    rename(country = borrowers_country) %>%
+    rename(country_code = borrowers_cty)
 
   filtered_df = named_df %>%
-    filter(.data$frequency == my_frequency) %>%
-    select(-.data$frequency) %>%
-    filter(.data$borrowing_sector == my_borrowing_sector) %>%
-    select(-.data$borrowing_sector) %>%
-    filter(.data$lending_sector == my_lending_sector) %>%
-    select(-.data$lending_sector)
+    filter(frequency == my_frequency) %>%
+    select(-frequency) %>%
+    filter(borrowing_sector == my_borrowing_sector) %>%
+    select(-borrowing_sector) %>%
+    filter(lending_sector == my_lending_sector) %>%
+    select(-lending_sector)
 
   clean_df = filtered_df %>%
-    mutate(credit_gap_data_type = str_remove_all(.data$credit_gap_data_type,"\\(.*\\)")) %>%
-    mutate(credit_gap_data_type = str_remove_all(.data$credit_gap_data_type,"Credit-to-GDP")) %>%
-    mutate(credit_gap_data_type = str_remove_all(.data$credit_gap_data_type,"\\s")) %>%
-    pivot_longer(-c(.data$country,
-                    .data$country_code,
-                    .data$credit_gap_data_type), names_to = "date",
+    mutate(credit_gap_data_type = str_remove_all(credit_gap_data_type,"\\(.*\\)")) %>%
+    mutate(credit_gap_data_type = str_remove_all(credit_gap_data_type,"Credit-to-GDP")) %>%
+    mutate(credit_gap_data_type = str_remove_all(credit_gap_data_type,"\\s")) %>%
+    pivot_longer(-c(country,
+                    country_code,
+                    credit_gap_data_type), names_to = "date",
                  values_to = "credit_gdp") %>%
     filter(complete.cases(.)) %>%
-    mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q")) %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_"))
+    mutate(date = as.yearqtr(date, format = "%Y-Q%q")) %>%
+    mutate(country = str_replace_all(country, "\\s", "_"))
 
   return(clean_df)
 
@@ -218,14 +215,14 @@ import_bis_total_credit = function(file_path = NULL,
                              " a fix parity\\)")
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
-    select(-.data$`Time Period`) %>%
+    select(-`Time Period`) %>%
     select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
     rename(country = "borrowers'_country") %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_")) %>%
+    mutate(country = str_replace_all(country, "\\s", "_")) %>%
     mutate(unit_type = str_replace_all(unit_type,
                                           long_currency_str,
                                           "Domestic currency"))
@@ -413,12 +410,12 @@ import_bis_debt_sec = function(file_path,
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
     select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
-    select(-.data$`Time Period`) %>%
+    select(-`Time Period`) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    mutate(issuer_residence = str_replace_all(.data$issuer_residence,"\\s","_"))
+    mutate(issuer_residence = str_replace_all(issuer_residence,"\\s","_"))
 
 
   for (filter_val in c(
@@ -464,7 +461,7 @@ import_bis_debt_sec = function(file_path,
                    names_to = "date",
                    values_to = "debt_credit"
       ) %>%
-      mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+      mutate(date = as.yearqtr(date, format = "%Y-Q%q"))
 
 
 
@@ -617,7 +614,7 @@ import_bis_lbs = function(file_path,
   . = NULL
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
-    select(-.data$`Time Period`) %>%
+    select(-`Time Period`) %>%
     select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
@@ -674,7 +671,7 @@ import_bis_lbs = function(file_path,
                    names_to = "date",
                    values_to = "balance"
       ) %>%
-      mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+      mutate(date = as.yearqtr(date, format = "%Y-Q%q"))
 
 
 
@@ -745,14 +742,14 @@ import_bis_selected_property_prices = function(file_path,
   . = NULL
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
-    select(-.data$`Time Period`) %>%
+    select(-`Time Period`) %>%
     select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
     rename(country = reference_area) %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_")) %>%
+    mutate(country = str_replace_all(country, "\\s", "_")) %>%
     mutate(across(where(is.character), ~str_remove_all(.,"^[A-Z0-9]+:")))
 
 
@@ -797,7 +794,7 @@ import_bis_selected_property_prices = function(file_path,
                    names_to = "date",
                    values_to = "property_price"
       ) %>%
-      mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+      mutate(date = as.yearqtr(date, format = "%Y-Q%q"))
 
 
 
@@ -813,11 +810,9 @@ import_bis_selected_property_prices = function(file_path,
 #'
 #' @importFrom  readr read_csv cols
 #'
-#' @importFrom zoo as.yearqtr
 #'
 #' @importFrom stats complete.cases
 #'
-#' @importFrom rlang .data
 #'
 #' @importFrom  tidyr pivot_longer
 #'
@@ -833,12 +828,10 @@ import_bis_selected_property_prices = function(file_path,
 #' @param my_frequency time frequency of the data (default is NULL),
 #' available options are:
 #' \itemize{
+#'  \item Daily
 #'  \item Quarterly
 #'  \item Annual
 #' }
-#'
-#' @param my_currency string specifies the counter currency in USD/XXX pair
-#'
 #'
 #' @param my_collection (default is NULL),
 #' available options are:
@@ -862,19 +855,18 @@ import_bis_fx_rates = function(file_path,
   . = NULL
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
-    select(-.data$`Time Period`) %>%
-    select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
+    select(matches("[0-9]"),Frequency,CURRENCY,
+                    Collection, `Reference area`) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
-    rename_all( ~ str_replace_all(., "_-_", "_")) %>%
-    rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
+    # rename_all( ~ str_replace_all(., "_-_", "_")) %>%
+    # rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
     rename(country = reference_area) %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_"))
+    mutate(country = str_replace_all(country, "\\s", "_"))
 
 
   for (filter_name in c(
     "my_frequency",
-    "my_currency",
     "my_collection"
   )) {
 
@@ -911,9 +903,8 @@ import_bis_fx_rates = function(file_path,
     filtered_df = filtered_df %>%
       pivot_longer(matches("^[0-9]"),
                    names_to = "date",
-                   values_to = "fx_rate"
-      ) %>%
-      mutate(date = as.yearqtr(.data$date, format = "%Y-Q%q"))
+                   values_to = "fx_rate") %>%
+      filter(complete.cases(.))
 
 
 
@@ -976,14 +967,13 @@ import_bis_cpi_index = function(file_path,
   . = NULL
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
-    select(-.data$`Time Period`) %>%
     select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
     rename(country = reference_area) %>%
-    mutate(country = str_replace_all(.data$country, "\\s", "_"))
+    mutate(country = str_replace_all(country, "\\s", "_"))
 
 
   for (filter_name in c(
@@ -1026,6 +1016,10 @@ import_bis_cpi_index = function(file_path,
                    names_to = "date",
                    values_to = "cpi"
       )
+
+    filtered_df = filtered_df %>%
+      select(country, date, cpi) %>%
+      filter(complete.cases(.))
 
 
 
@@ -1143,15 +1137,15 @@ import_bis_liqiudity_indicators = function(file_path,
   . = NULL
 
   filtered_df = read_csv(file_path, col_types = cols()) %>%
-    select(-.data$`Time Period`,-.data$Title,
-           -.data$`Unit Multiplier`, -.data$Decimals,
-           -.data$`Collection Indicator`, -.data$Availability) %>%
+    select(-`Time Period`,-Title,
+           -`Unit Multiplier`, -Decimals,
+           -`Collection Indicator`, -Availability) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
     rename_all(~ str_remove_all(., "_\\(.*\\)$")) %>%
     rename_all(~ str_remove_all(., "\\'")) %>%
     rename_with(tolower, matches("^[A-Za-z]")) %>%
-    mutate(borrowers_country = str_replace_all(.data$borrowers_country,
+    mutate(borrowers_country = str_replace_all(borrowers_country,
                                                "\\s", "_")) %>%
     mutate(across(where(is.character), ~str_remove_all(.,"^[A-Z0-9]+:")))
 
