@@ -553,9 +553,11 @@ import_boi_debt_df = function(file_path = NULL,
 
   file_name = "itrchovh.xlsx"
 
-  source_link = paste0(
-    "https://www.boi.org.il/he/DataAndStatistics",
-    "/Lists/BoiTablesAndGraphs/", file_name)
+
+
+  source_link = paste0("https://www.boi.org.il",
+                        "/boi_files/Statistics/",
+                       file_name)
 
   if(is.null(file_path)){
 
