@@ -699,8 +699,8 @@ import_boi_public_assets_by_asset_class = function(file_path = NULL,
 
   if(download_file){
 
-    source_link = paste0("https://www.boi.org.il/he/",
-                         "DataAndStatistics/Lists/BoiTablesAndGraphs/",
+    source_link = paste0("https://www.boi.org.il/",
+                         "boi_files/Statistics/",
                          file_name)
 
     download.file(url = source_link,destfile = file_path,mode = "wb")
