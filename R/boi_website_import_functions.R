@@ -617,8 +617,10 @@ import_boi_debt_df = function(file_path = NULL,
 import_boi_debt_by_sectors_df = function(file_path = NULL,
                                          download_file = FALSE){
 
-  source_link = paste0("https://www.boi.org.il/he/DataAndStatistics",
-                       "/Lists/BoiTablesAndGraphs/itra_hov_bs.xlsx")
+
+
+  source_link = paste0("https://www.boi.org.il/boi_files",
+                       "/Statistics/itra_hov_bs.xlsx")
 
   if(is.null(file_path)){
 
