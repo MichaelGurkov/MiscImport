@@ -611,10 +611,8 @@ import_bis_lbs = function(file_path,
                           my_counterparty_country = NULL,
                           my_position_type = NULL,
                           pivot_to_long = FALSE) {
-  . = NULL
 
-  filtered_df = read_csv(file_path, col_types = cols()) %>%
-    select(-`Time Period`) %>%
+  filtered_df = read_csv(file_path, show_col_types = FALSE) %>%
     select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%

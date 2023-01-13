@@ -85,15 +85,17 @@ import_tase_market_cap = function(file_path = NULL,
 #'
 #' @import lubridate
 #'
+#' @param linkage_category string nominal or real
+#'
 #' @export
 #'
 import_tase_capital_issuance = function(file_path = NULL,
                                   download_file = FALSE,
+                                  linkage_category,
                                   pivot_to_long = TRUE){
 
 
-  col_names = c("year",
-                "stock",
+  col_names_nominal = c("year",
                 "stock_options",
                 "stock_convertible_bond",
                 "stock_issuance_total",
@@ -111,21 +113,39 @@ import_tase_capital_issuance = function(file_path = NULL,
                 "corp_bond_total",
                 "financial_instruments")
 
-  # temp_year = year(now())
-  #
-  # source_url = paste0("https://info.tase.co.il/Heb/Statistics/StatRes/",
-  #                     temp_year,"/Stat_281_l15_",temp_year,".xlsx")
 
-  if(is.null(file_path)){
+  col_names_real = c("year",
+                     "stock_convertibles_issuance",
+                     "stock_convertibles_options_exercise",
+                     "stock_total",
+                     "gov_bond_issuance",
+                     "corp_bond_issuance",
+                     "corp_bond_option_exercise",
+                     "corp_bond_tase_up",
+                     "corp_bond_total",
+                     "financial_instruments")
 
-    file_path = paste0(Sys.getenv("USERPROFILE"),
-                       "\\OneDrive - Bank Of Israel",
-                       "\\Data\\TASE\\stats\\capital_issuance_stat.xlsx")
+
+  if(linkage_category == "nominal"){
+
+    cell_range = cell_limits(ul = c(4,1),lr = c(NA_integer_,18))
+
+    col_names = col_names_nominal
+
+  }
+
+  if(linkage_category == "real"){
+
+    cell_range = cell_limits(ul = c(4,1),lr = c(NA_integer_,10))
+
+    col_names = col_names_real
 
   }
 
 
-  cell_range = cell_limits(ul = c(4,1),lr = c(NA_integer_,18))
+
+
+
 
   raw_df = read_xlsx(file_path,range = cell_range)
 
@@ -139,7 +159,8 @@ import_tase_capital_issuance = function(file_path = NULL,
 
     df = df %>%
       select(-contains("total")) %>%
-      pivot_longer(-year,names_to = "asset_class", values_to = "issuance_amount")
+      pivot_longer(-year,names_to = "asset_class",
+                   values_to = "issuance_amount")
 
 
   }
