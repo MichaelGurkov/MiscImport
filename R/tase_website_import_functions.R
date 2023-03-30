@@ -173,3 +173,59 @@ import_tase_capital_issuance = function(file_path = NULL,
 
 
 }
+
+#' This functions downloads trading volumes data
+#'
+#' @import readxl
+#'
+#' @importFrom zoo as.yearmon
+#'
+#' @import dplyr
+#'
+#' @import tidyr
+#'
+#' @import lubridate
+#'
+#' @export
+#'
+import_tase_trading_volume = function(file_path,
+                                      download_file = FALSE,
+                                      pivot_to_long = TRUE){
+
+
+  col_names = c("year",
+                "stock_and_convertibles",
+                "gov_bond",
+                "non_gov_bond",
+                "total_bond",
+                "makam",
+                "total_trading_volume")
+
+
+  cell_range = cell_limits(ul = c(4,1),lr = c(NA_integer_,7))
+
+  raw_df = read_xlsx(file_path,range = cell_range)
+
+  df = raw_df %>%
+    purrr::set_names(col_names) %>%
+    mutate(across(everything(), as.numeric)) %>%
+    filter(!is.na(year))
+
+
+  if(pivot_to_long){
+
+    df = df %>%
+      select(-contains("total")) %>%
+      pivot_longer(-year,names_to = "asset_class", values_to = "market_cap")
+
+
+  }
+
+
+  return(df)
+
+
+
+
+
+}
