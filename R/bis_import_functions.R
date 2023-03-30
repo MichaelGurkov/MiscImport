@@ -171,7 +171,7 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 #'  \item Banks, domestic
 #' }
 #'
-#' @param my_valuation (default is NULL), toggles the
+#' @param my_valuation_method (default is NULL), toggles the
 #' difference between credit and debt. available options are:
 #' \itemize{
 #'  \item Nominal value
@@ -188,7 +188,7 @@ import_bis_credit_to_gdp_ratios = function(file_path,
 #' }
 #'
 #'
-#' @param my_type_of_adjustment (default is NULL),
+#' @param my_adjustment (default is NULL),
 #' available options are:
 #' \itemize{
 #'  \item Adjusted for breaks
@@ -203,19 +203,16 @@ import_bis_total_credit = function(file_path = NULL,
                                    my_frequency = NULL,
                                    my_borrowing_sector = NULL,
                                    my_lending_sector = NULL,
-                                   my_valuation = NULL,
+                                   my_valuation_method = NULL,
                                    my_unit_type = NULL,
-                                   my_type_of_adjustment = NULL,
+                                   my_adjustment = NULL,
                                    pivot_to_long = FALSE) {
-
-  . = NULL
 
   long_currency_str = paste0("Domestic currency \\(incl\\. conversion",
                              " to current currency made using",
                              " a fix parity\\)")
 
-  filtered_df = read_csv(file_path, col_types = cols()) %>%
-    select(-`Time Period`) %>%
+  filtered_df = read_csv(file_path, show_col_types = FALSE) %>%
     select(-matches("^[A-Z_]+$", ignore.case = FALSE)) %>%
     rename_all( ~ str_replace_all(., " ", "_")) %>%
     rename_all( ~ str_replace_all(., "_-_", "_")) %>%
@@ -232,9 +229,9 @@ import_bis_total_credit = function(file_path = NULL,
     "my_frequency",
     "my_borrowing_sector",
     "my_lending_sector",
-    "my_valuation",
+    "my_valuation_method",
     "my_unit_type",
-    "my_type_of_adjustment"
+    "my_adjustment"
   )) {
 
 
@@ -266,6 +263,9 @@ import_bis_total_credit = function(file_path = NULL,
 
 
   if(pivot_to_long){
+
+    filtered_df = filtered_df %>%
+      select(-series)
 
     filtered_df = filtered_df %>%
       pivot_longer(matches("^[0-9]"),
