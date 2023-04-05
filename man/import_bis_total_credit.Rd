@@ -9,9 +9,9 @@ import_bis_total_credit(
   my_frequency = NULL,
   my_borrowing_sector = NULL,
   my_lending_sector = NULL,
-  my_valuation = NULL,
+  my_valuation_method = NULL,
   my_unit_type = NULL,
-  my_type_of_adjustment = NULL,
+  my_adjustment = NULL,
   pivot_to_long = FALSE
 )
 }
@@ -41,7 +41,7 @@ available options are:
  \item Banks, domestic
 }}
 
-\item{my_valuation}{(default is NULL), toggles the
+\item{my_valuation_method}{(default is NULL), toggles the
 difference between credit and debt. available options are:
 \itemize{
  \item Nominal value
@@ -57,7 +57,7 @@ available options are:
  \item Domestic currency
 }}
 
-\item{my_type_of_adjustment}{(default is NULL),
+\item{my_adjustment}{(default is NULL),
 available options are:
 \itemize{
  \item Adjusted for breaks
