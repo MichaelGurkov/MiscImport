@@ -195,8 +195,7 @@ import_boi_institutional_portolio_asset_class = function(file_path = NULL,
   file_name = "shce28_h.xls"
 
   source_link = paste0(
-    "https://www.boi.org.il/he/",
-    "DataAndStatistics/Lists/BoiTablesAndGraphs/",
+    "https://www.boi.org.il/boi_files/Statistics/",
     file_name)
 
 
